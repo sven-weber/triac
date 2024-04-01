@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from triac.target import Target
+from triac.types.target import Target
 
 T = TypeVar("T")
 
@@ -20,7 +20,6 @@ class BaseType(ABC, Generic[T]):
     def __init__(self) -> None:
         super().__init__()
 
-    @staticmethod
     @abstractmethod
-    def generate() -> BaseValue[T]:
+    def generate(self) -> BaseValue[T]:
         pass

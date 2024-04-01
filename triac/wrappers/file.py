@@ -1,4 +1,5 @@
-from triac.wrapper import Wrapper, Definition, State
+from triac.values.path import PathType
+from triac.types.wrapper import Wrapper, Definition, State
 
 
 class File(Wrapper):

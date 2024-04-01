@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict
 
-from triac.base_type import BaseType, BaseValue
-from triac.target import Target
+from triac.types.base import BaseType, BaseValue
+from triac.types.target import Target
 
 Definition = Dict[str, BaseType]
 State = Dict[str, BaseValue]
