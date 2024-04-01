@@ -1,8 +1,10 @@
 from pwd import getpwall, struct_passwd
 from random import choice
+
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
 from triac.types.target import Target
+
 
 class User:
     def __init__(self, data: struct_passwd) -> None:
@@ -33,17 +35,19 @@ class User:
     def shell(self) -> str:
         return self.__shell
 
+
 class UserValue(BaseValue):
     def __init__(self, val: User) -> None:
         super().__init__(val)
 
     def transform(self, target: Target) -> str:
         if target == Target.ANSIBLE:
-            return f"'{self.val.name}'" # single quotes in ansible cannot be evaluated with variables
+            return f"'{self.val.name}'"  # single quotes in ansible cannot be evaluated with variables
         elif target == Target.PYINFRA:
-            return f"\"{self.val.name}\""
+            return f'"{self.val.name}"'
         else:
             raise UnsupportedTargetValueError(target, self)
+
 
 class UserType(BaseType):
     def __init__(self) -> None:

@@ -1,8 +1,10 @@
 from grp import getgrall, struct_group
 from random import choice
+
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
 from triac.types.target import Target
+
 
 class Group:
     def __init__(self, data: struct_group) -> None:
@@ -18,17 +20,19 @@ class Group:
     def gid(self) -> int:
         return self.__gid
 
+
 class GroupValue(BaseValue):
     def __init__(self, val: Group) -> None:
         super().__init__(val)
 
     def transform(self, target: Target) -> str:
         if target == Target.ANSIBLE:
-            return f"'{self.val.name}'" # single quotes in ansible cannot be evaluated with variables
+            return f"'{self.val.name}'"  # single quotes in ansible cannot be evaluated with variables
         elif target == Target.PYINFRA:
-            return f"\"{self.val.name}\""
+            return f'"{self.val.name}"'
         else:
             raise UnsupportedTargetValueError(target, self)
+
 
 class GroupType(BaseType):
     def __init__(self) -> None:
