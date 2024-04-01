@@ -1,3 +1,4 @@
-from triac.wrapper import Wrapper
+from lib.docker.client import *
+from lib.docker.client import BaseImages
 
-print("Hello world!")
+build_base_image(BaseImages.DEBIAN12)
