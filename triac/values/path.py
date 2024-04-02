@@ -5,12 +5,25 @@ from random import choice, randint
 from re import match
 from typing import Any, Dict, Optional, cast
 
+<<<<<<< HEAD
 from triac.lib.random.dict import random_dict_choice
 from triac.lib.random.values import BOOLEANS, probability_bound
+=======
+from lib.random import BOOLEANS, probability_bound, Fuzzer
+>>>>>>> 73a8e2e (add state fuzzing and logging)
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
 from triac.types.target import Target
 
+class FileType(Enum):
+    FILE = "file"
+    DIRECTORY = "directory"
+    SYMLINK = "symlink"
+
+
+DESCENT_FACTOR = 1.5
+BACKTRACK_FACTOR = 2
+IGNORE_PATHS = "/(proc|mnt|run|dev|lib\\w*|sys|boot|srv|bin|usr/bin|\\w*sbin)"
 
 class PathValue(BaseValue):
     def __init__(self, val: str) -> None:
@@ -23,18 +36,6 @@ class PathValue(BaseValue):
             return f'"{self.val}"'
         else:
             raise UnsupportedTargetValueError(target, self)
-
-
-class FileType(Enum):
-    FILE = "file"
-    DIRECTORY = "directory"
-    SYMLINK = "symlink"
-
-
-DESCENT_FACTOR = 1.5
-BACKTRACK_FACTOR = 2
-IGNORE_PATHS = "/(proc|mnt|run|dev|lib\\w*|sys|boot|srv|bin|usr/bin|\\w*sbin)"
-
 
 class NoPathError(Exception):
     def __init__(self, existing: bool, filetype: FileType):
@@ -128,7 +129,7 @@ class PathType(BaseType):
         return self.__root
 
     def generate(self) -> PathValue:
-        opts = random_dict_choice(self.opts)
+        opts = Fuzzer.fuzz_dict(self.opts)
         path = None
         for _ in range(0, 100):
             try:
