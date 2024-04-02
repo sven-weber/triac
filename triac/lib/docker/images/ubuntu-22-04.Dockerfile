@@ -1,4 +1,4 @@
-FROM debian:12
+FROM ubuntu:22.04
 
 #
 # Install SSH server
@@ -25,12 +25,10 @@ RUN apt update && apt install -y python3 python3-pip && apt clean
 
 # Install packages
 COPY ./requirements/prod.txt requirements.txt
-RUN pip install --break-system-packages -r requirements.txt
+RUN pip install -r requirements.txt
 
 #
 # Enable systemd
 #
 RUN apt update && apt install -y systemd && apt clean
-ENV container docker
-
 ENTRYPOINT ["/lib/systemd/systemd"]

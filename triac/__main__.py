@@ -7,8 +7,8 @@ if __name__ == "__main__":
     user = UserType()
 
     docker = DockerClient()
-    image = docker.build_base_image(BaseImages.DEBIAN12)
-    for i in range(0, 2):
+    image = docker.build_base_image(BaseImages.UBUNTU22)
+    for i in range(0, 1):
         container = docker.run_container_from_image(image)
         obj = docker.execute_obj_method_in_container(user, "generate", container)
         print(obj.transform(Target.ANSIBLE))
