@@ -92,9 +92,22 @@ class DockerClient:
         # Return
         return res
 
-    def remove_container(self, container: Container):
-        print(f"Removing container with id {container.id}")
+    def stop_container(self, container: Container):
         container.base_obj.stop()
         container.base_obj.wait()
+
+    def commit_container_to_image(self, container: Container):
+        self.stop_container(container)
+        image_repository = "triac"
+        image_tag = "intermediate-state"
+        container.base_obj.commit(repository=image_repository, author="triac", tag=image_tag)
+        return f"triac:intermediate-state"
+
+    def remove_container(self, container: Container):
+        print(f"Removing container with id {container.id}")
+        self.stop_container(container)
         container.base_obj.remove(v=True)
         print(f"Container with id {container.id} removed")
+
+    def remove_image(self, image: str):
+        self.get_client().images.remove(image)

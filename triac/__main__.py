@@ -8,7 +8,13 @@ if __name__ == "__main__":
 
     docker = DockerClient()
     image = docker.build_base_image(BaseImages.DEBIAN12)
-    container = docker.run_container_from_image(image)
-    obj = docker.execute_obj_method_in_container(user, "generate", container)
-    print(obj.transform(Target.ANSIBLE))
-    docker.remove_container(container)
+    for i in range(0, 2):
+        container = docker.run_container_from_image(image)
+        obj = docker.execute_obj_method_in_container(user, "generate", container)
+        print(obj.transform(Target.ANSIBLE))
+        image = docker.commit_container_to_image(container)
+        docker.remove_container(container)
+    
+    docker.remove_image(image)
+
+
