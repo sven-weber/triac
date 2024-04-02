@@ -5,8 +5,8 @@ from random import choice, randint
 from re import match
 from typing import Any, Dict, Optional, cast
 
-from lib.random.dict import random_dict_choice
-from lib.random.values import BOOLEANS, probability_bound
+from triac.lib.random.dict import random_dict_choice
+from triac.lib.random.values import BOOLEANS, probability_bound
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
 from triac.types.target import Target

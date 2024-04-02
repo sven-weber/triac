@@ -1,7 +1,5 @@
 FROM debian:12
 
-WORKDIR /usr/app/triac
-
 #
 # Install SSH server
 #
@@ -23,15 +21,14 @@ EXPOSE 22
 #
 # Install python
 #
-RUN apt update && apt install -y python3 && apt clean
+RUN apt update && apt install -y python3 python3-pip && apt clean
+
+# Install packages
+COPY ./requirements/prod.txt requirements.txt
+RUN pip install --break-system-packages -r requirements.txt
 
 #
 # Enable systemd
 #
-ENV container docker
-ENV DEBIAN_FRONTEND noninteractive
-
 RUN apt update && apt install -y systemd && apt clean
-
-#docker run --cgroupns=host --privileged -p 1234:22 --volume /sys/fs/cgroup:/sys/fs/cgroup test
 ENTRYPOINT ["/lib/systemd/systemd"]
