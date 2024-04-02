@@ -1,6 +1,7 @@
 from random import choice
 from typing import Any, Dict, List
 
+from triac.lib.docker.types.container import Container
 from triac.types.wrapper import Definition, State
 
 BOOLEANS = [True, False]
@@ -20,8 +21,8 @@ class Fuzzer:
         return res
 
     @staticmethod
-    def fuzz_state(d: Definition) -> State:
+    def fuzz_state(d: Definition, container: Container) -> State:
         res = {}
         for key, typ in d.items():
-            res[key] = typ.generate()
+            res[key] = container.execute_method(typ, 'generate', [])
         return res

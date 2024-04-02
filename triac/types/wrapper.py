@@ -23,5 +23,5 @@ class Wrapper(ABC):
 
     @staticmethod
     @abstractmethod
-    def verify() -> State:
+    def verify(state: State) -> State:
         pass

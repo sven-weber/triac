@@ -1,6 +1,7 @@
 from typing import List, Tuple, cast
 
 from triac.lib.docker.types.base_images import BaseImages
+from triac.lib.docker.types.container import Container
 from triac.lib.encoding import decode, encode
 from triac.lib.random import Fuzzer
 from triac.types.wrapper import State, Wrapper
@@ -32,9 +33,9 @@ class Wrappers:
         file.close()
         pass
 
-    def append(self, wrapper: Wrapper) -> State:
+    def append(self, wrapper: Wrapper, container: Container) -> State:
         identifier = Identifier(wrapper)
-        state = Fuzzer.fuzz_state(wrapper.definition())
+        state = Fuzzer.fuzz_state(wrapper.definition(), container)
         self.data.append((identifier, state))
         return state
 

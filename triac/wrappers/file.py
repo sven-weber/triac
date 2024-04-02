@@ -7,16 +7,14 @@ from triac.values.mode import ModeType
 from triac.values.path import PathType
 from triac.values.user import UserType
 
-ANSIBLE_TEMPLATE = """
-ansible.builtin.file:
+ANSIBLE_TEMPLATE = """ansible.builtin.file:
   path: {path}
   owner: {owner}
   group: {group}
   mode: {mode}
 """
 
-PYINFRA_TEMPLATE = """
-files.file(,
+PYINFRA_TEMPLATE = """files.file(,
     path={path},
     present={present},
     user={user},
@@ -44,13 +42,14 @@ class File(Wrapper):
 
     @staticmethod
     def transform(target: Target, state: State) -> str:
+        s = {key: value.transform(target) for key, value in state.items()}
         if target == Target.ANSIBLE:
-            return ANSIBLE_TEMPLATE.format(**state)
+            return ANSIBLE_TEMPLATE.format(**s)
         elif target == Target.PYINFRA:
-            return PYINFRA_TEMPLATE.format(**state)
+            return PYINFRA_TEMPLATE.format(**s)
         else:
             raise UnsupportedTargetWrapperError(target, File.__name__)
 
     @staticmethod
-    def verify() -> State:
-        return {}
+    def verify(state: State) -> State:
+        return state

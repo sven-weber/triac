@@ -8,13 +8,14 @@ from sys import argv
 from triac.lib.encoding import encode, decode
 
 # Expected arguments:
-#  1. The path to the module definitions of TrIAC
-#  2. pickle dump of the object as a base64 utf-8 encoded string
-#  3. The name of the method to call
+#  1.    The path to the module definitions of TrIAC
+#  2.    pickle dump of the object as a base64 utf-8 encoded string
+#  3.    The name of the method to call
+#  4..n. A list of optional arguments to use
 #
 # Result: pickle encoded base64 string of the method result
 
-if len(argv) != 4:
+if len(argv) < 4:
     print(f"Got invalid arguments! Gotten: {argv}")
     exit(1)
 
@@ -43,10 +44,14 @@ for module in modules:
 
 # Read in the object
 obj = decode(argv[2])
+arguments = [decode(arg) for arg in argv[4:]]
 
 # Call the method
 method = getattr(obj, argv[3])
-res = method()
+if len(arguments) > 0:
+    res = method(*arguments)
+else:
+    res = method()
 
 # Pickle the result
 encoded_obj = encode(res)
