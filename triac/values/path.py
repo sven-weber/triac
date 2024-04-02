@@ -5,15 +5,11 @@ from random import choice, randint
 from re import match
 from typing import Any, Dict, Optional, cast
 
-<<<<<<< HEAD
-from triac.lib.random.dict import random_dict_choice
-from triac.lib.random.values import BOOLEANS, probability_bound
-=======
-from lib.random import BOOLEANS, probability_bound, Fuzzer
->>>>>>> 73a8e2e (add state fuzzing and logging)
+from triac.lib.random import BOOLEANS, Fuzzer, probability_bound
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
 from triac.types.target import Target
+
 
 class FileType(Enum):
     FILE = "file"

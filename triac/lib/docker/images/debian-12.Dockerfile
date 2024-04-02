@@ -27,8 +27,11 @@ RUN apt update && apt install -y python3 python3-pip && apt clean
 COPY ./requirements/prod.txt requirements.txt
 RUN pip install --break-system-packages -r requirements.txt
 
+ENV container docker
+
 #
 # Enable systemd
 #
 RUN apt update && apt install -y systemd && apt clean
+
 ENTRYPOINT ["/lib/systemd/systemd"]

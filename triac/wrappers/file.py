@@ -1,6 +1,6 @@
 from triac.types.errors import UnsupportedTargetWrapperError
 from triac.types.target import Target
-from triac.types.wrapper import Definition, Identifier, State, Wrapper
+from triac.types.wrapper import Definition, State, Wrapper
 from triac.values.bool import BoolType
 from triac.values.group import GroupType
 from triac.values.mode import ModeType

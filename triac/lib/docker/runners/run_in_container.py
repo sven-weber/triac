@@ -5,6 +5,8 @@ from glob import glob
 from os.path import join
 from sys import argv
 
+from triac.lib.encoding import encode, decode
+
 # Expected arguments:
 #  1. The path to the module definitions of TrIAC
 #  2. pickle dump of the object as a base64 utf-8 encoded string
@@ -40,16 +42,14 @@ for module in modules:
     mod = __import__(import_path, fromlist=[None])
 
 # Read in the object
-pickle_dump = base64.b64decode(argv[2])
-obj = pickle.loads(pickle_dump)
+obj = decode(argv[2])
 
 # Call the method
 method = getattr(obj, argv[3])
 res = method()
 
 # Pickle the result
-obj_data = pickle.dumps(res)
-encoded_obj = base64.b64encode(obj_data).decode("utf-8")
+encoded_obj = encode(res)
 
 # Print the result
 print(encoded_obj)

@@ -6,6 +6,7 @@ from typing import Any
 
 import docker
 
+from triac.lib.encoding import encode, decode
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
 
@@ -75,8 +76,7 @@ class DockerClient:
         self, obj: Any, method: str, container: Container
     ):
         # Dump the object
-        obj_data = pickle.dumps(obj)
-        encoded_obj = base64.b64encode(obj_data).decode("utf-8")
+        encoded_obj = encode(obj)
 
         # Call the script in the container
         res = container.base_obj.exec_run(
@@ -86,8 +86,7 @@ class DockerClient:
         assert res[0] == 0  # Check exit code
 
         # Unpickle the result
-        pickle_dump = base64.b64decode(res[1])
-        res = pickle.loads(pickle_dump)
+        res = decode(res[1])
 
         # Return
         return res

@@ -1,8 +1,10 @@
-from typing import List, cast, Tuple
-from lib.docker.base_images import BaseImages
-from lib.encoding import encode, decode
-from lib.random import Fuzzer
+from typing import List, Tuple, cast
+
+from triac.lib.docker.types.base_images import BaseImages
+from triac.lib.encoding import decode, encode
+from triac.lib.random import Fuzzer
 from triac.types.wrapper import State, Wrapper
+
 
 class Identifier:
     def __init__(self, obj: Wrapper) -> None:

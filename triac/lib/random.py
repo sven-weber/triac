@@ -1,5 +1,6 @@
 from random import choice
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
 from triac.types.wrapper import Definition, State
 
 BOOLEANS = [True, False]
