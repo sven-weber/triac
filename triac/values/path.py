@@ -21,6 +21,7 @@ DESCENT_FACTOR = 1.5
 BACKTRACK_FACTOR = 2
 IGNORE_PATHS = "/(proc|mnt|run|dev|lib\\w*|sys|boot|srv|bin|usr/bin|\\w*sbin)"
 
+
 class PathValue(BaseValue):
     def __init__(self, val: str) -> None:
         super().__init__(val)
@@ -32,6 +33,7 @@ class PathValue(BaseValue):
             return f'"{self.val}"'
         else:
             raise UnsupportedTargetValueError(target, self)
+
 
 class NoPathError(Exception):
     def __init__(self, existing: bool, filetype: FileType):

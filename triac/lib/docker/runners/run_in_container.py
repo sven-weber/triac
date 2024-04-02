@@ -5,7 +5,7 @@ from glob import glob
 from os.path import join
 from sys import argv
 
-from triac.lib.encoding import encode, decode
+from triac.lib.encoding import decode, encode
 
 # Expected arguments:
 #  1.    The path to the module definitions of TrIAC

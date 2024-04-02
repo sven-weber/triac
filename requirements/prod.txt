@@ -1,2 +1,5 @@
 docker>=7.0
 ansible_runner>=2.3.6
+art>=6.1
+rich>=13.7.1
+click>=8.1.7

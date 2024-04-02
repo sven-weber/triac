@@ -2,12 +2,15 @@ from random import choice
 from typing import Any, Dict, List
 
 from triac.lib.docker.types.container import Container
+from triac.lib.docker.types.base_images import BaseImages
 from triac.types.wrapper import Definition, State
 
 BOOLEANS = [True, False]
 
+
 def probability_bound(prob: float) -> float:
     return min(max(prob, 0), 100)
+
 
 class Fuzzer:
     def __init__(self) -> None:
@@ -26,3 +29,7 @@ class Fuzzer:
         for key, typ in d.items():
             res[key] = container.execute_method(typ, 'generate', [])
         return res
+
+    @staticmethod
+    def fuzz_base_image() -> BaseImages:
+        return choice([val for val in BaseImages])

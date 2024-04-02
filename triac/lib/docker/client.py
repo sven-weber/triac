@@ -62,7 +62,9 @@ class DockerClient:
     def commit_container_to_image(self, container: Container):
         image_repository = "triac"
         image_tag = "intermediate-state"
-        container.base_obj.commit(repository=image_repository, author="triac", tag=image_tag)
+        container.base_obj.commit(
+            repository=image_repository, author="triac", tag=image_tag
+        )
         return f"triac:intermediate-state"
 
     def remove_container(self, container: Container):

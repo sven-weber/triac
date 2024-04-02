@@ -7,6 +7,7 @@ from triac.types.target import Target
 Definition = Dict[str, BaseType]
 State = Dict[str, BaseValue]
 
+
 class Wrapper(ABC):
     def __init__(self) -> None:
         super().__init__()

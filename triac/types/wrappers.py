@@ -21,14 +21,17 @@ class Identifier:
     def cls(self) -> str:
         return self.__cls
 
+
 class Wrappers:
-    def __init__(self, base_image: BaseImages, data: List[Tuple[Identifier, State]]) -> None:
-        self.base_image = base_image
-        self.data = data
+    def __init__(
+        self, base_image: BaseImages, data: List[Tuple[Identifier, State]]
+    ) -> None:
+        self.__base_image = base_image
+        self.__data = data
         pass
 
     def save(self, dest: str) -> None:
-        file = open(dest, 'w')
+        file = open(dest, "w")
         file.write(encode(self))
         file.close()
         pass
@@ -39,6 +42,11 @@ class Wrappers:
         self.data.append((identifier, state))
         return state
 
+    @property
+    def base_image(self) -> str:
+        return self.__base_image
+
+
 def load(path: str) -> Wrappers:
-    with open(path, 'r') as file:
+    with open(path, "r") as file:
         return cast(Wrappers, decode(file.read()))
