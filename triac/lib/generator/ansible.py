@@ -1,12 +1,14 @@
-from ansible_runner import run_async as ansible_run
 from os.path import join
 
+from ansible_runner import run_async as ansible_run
 from ansible_runner.interface import InventoryConfig
+
 from triac.lib.docker.types.container import Container
-from triac.lib.generator.tmp import Tmp
 from triac.lib.generator.key import Key
-from triac.types.wrapper import Wrapper, State
+from triac.lib.generator.tmp import Tmp
 from triac.types.target import Target
+from triac.types.wrapper import State, Wrapper
+
 
 class Ansible(Tmp, Key):
     def __init__(self, wrapper: Wrapper, state: State, container: Container) -> None:
@@ -19,7 +21,7 @@ class Ansible(Tmp, Key):
 
         self.__inventory_path = join(super().tmp_path, "inventory.yaml")
         self.__playbook_path = join(super().tmp_path, "playbook.yaml")
-        
+
         self.__generate()
 
     def __inventory(self) -> str:
@@ -37,12 +39,12 @@ all:
     def __playbook(self) -> str:
         raw_task = self.__wrapper.transform(Target.ANSIBLE, self.__state)
         task = ""
-        for i, line in enumerate(raw_task.split('\n')):
+        for i, line in enumerate(raw_task.split("\n")):
             if i != 0:
                 task += "      " + line
             else:
                 task += line
-            task += '\n'
+            task += "\n"
 
         return f"""
 - name: {type(self.__wrapper).__name__}
@@ -61,10 +63,14 @@ all:
         pass
 
     def run(self) -> State:
-        _, runner = ansible_run(inventory=self.__inventory_path, playbook=self.__playbook_path, quiet=True)
+        _, runner = ansible_run(
+            inventory=self.__inventory_path, playbook=self.__playbook_path, quiet=True
+        )
         # TODO: use these
         for event in runner.events:
-            if 'event' in event:
+            if "event" in event:
                 print(event["event"])
-        state = self.__container.execute_method(self.__wrapper, "verify", [self.__state])
+        state = self.__container.execute_method(
+            self.__wrapper, "verify", [self.__state]
+        )
         return state

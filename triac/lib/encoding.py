@@ -7,6 +7,7 @@ def encode(obj: object) -> str:
     b64enc = b64encode(enc).decode("utf-8")
     return b64enc
 
+
 def decode(b64enc: str) -> object:
     enc = b64decode(b64enc)
     obj = loads(enc)

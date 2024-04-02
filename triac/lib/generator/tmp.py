@@ -1,5 +1,6 @@
-from tempfile import mkdtemp
 from shutil import rmtree
+from tempfile import mkdtemp
+
 
 class Tmp:
     def __init__(self) -> None:

@@ -1,8 +1,9 @@
-from os.path import commonprefix, dirname, join, relpath, realpath
+from os.path import commonprefix, dirname, join, realpath, relpath
 from typing import Any, List
 
-from triac.lib.docker.const import TRIAC_SRC_DIR, TRIAC_WORKING_DIR, TRIAC_DIR_IN_REPO
-from triac.lib.encoding import encode, decode
+from triac.lib.docker.const import TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR, TRIAC_WORKING_DIR
+from triac.lib.encoding import decode, encode
+
 
 class Container:
     def __init__(self, id, ssh_port, base_obj):
@@ -32,9 +33,7 @@ class Container:
             TRIAC_SRC_DIR, relative_path_to_lib_docker, "runners", "run_in_container.py"
         )
 
-    def execute_method(
-        self, obj: Any, method: str, arguments: List[Any]
-    ) -> Any:
+    def execute_method(self, obj: Any, method: str, arguments: List[Any]) -> Any:
         # Dump the object
         encoded_obj = encode(obj)
         encoded_args = " ".join([encode(arg) for arg in arguments])

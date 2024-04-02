@@ -1,13 +1,12 @@
 from os import getcwd
-from os.path import  dirname, join
+from os.path import dirname, join
 from signal import SIGILL
 
 import docker
 
-from triac.lib.docker.const import TRIAC_DIR_IN_REPO
+from triac.lib.docker.const import TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR, TRIAC_WORKING_DIR
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
-from triac.lib.docker.const import TRIAC_SRC_DIR, TRIAC_WORKING_DIR
 
 
 class DockerClient:
@@ -32,7 +31,6 @@ class DockerClient:
         print(f"Base image finished building")
         return image_identifier
 
-
     def run_container_from_image(self, image_identifier: str) -> Container:
         print(f"Starting container for image {image_identifier}")
         ssh_image_port = "22/tcp"
@@ -56,8 +54,6 @@ class DockerClient:
         ssh_host_port = container.ports[ssh_image_port][0]["HostPort"]
         print(f"Container running with ssh available at port {ssh_host_port}")
         return Container(container.id, ssh_host_port, container)
-
-
 
     def commit_container_to_image(self, container: Container):
         image_repository = "triac"
