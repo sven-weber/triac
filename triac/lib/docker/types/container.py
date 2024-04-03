@@ -1,7 +1,8 @@
 from os.path import commonprefix, dirname, join, realpath, relpath
 from typing import Any, List
 
-from triac.lib.docker.const import TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR, TRIAC_WORKING_DIR
+from triac.lib.docker.const import (TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR,
+                                    TRIAC_WORKING_DIR)
 from triac.lib.encoding import decode, encode
 
 

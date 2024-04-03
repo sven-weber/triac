@@ -4,6 +4,7 @@ from logging import LogRecord
 
 from rich.text import Text
 
+
 class UILoggingHandler(logging.Handler):
     def __init__(self, console_out: Text, capture_libs: bool):
         logging.Handler.__init__(self)

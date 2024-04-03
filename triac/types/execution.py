@@ -25,7 +25,7 @@ class Execution:
     @property
     def log_level(self) -> str:
         return self.__log_level
-    
+
     @property
     def elapsed_time(self) -> any:
         current_time = datetime.now()

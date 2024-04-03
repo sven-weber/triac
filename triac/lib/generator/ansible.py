@@ -1,3 +1,4 @@
+import logging
 from os.path import join
 
 from ansible_runner import run_async as ansible_run
@@ -18,6 +19,7 @@ class Ansible(Tmp, Key):
         self.__wrapper = wrapper
         self.__state = state
         self.__container = container
+        self.__logger = logging.getLogger(__name__)
 
         self.__inventory_path = join(super().tmp_path, "inventory.yaml")
         self.__playbook_path = join(super().tmp_path, "playbook.yaml")
@@ -69,7 +71,7 @@ all:
         # TODO: use these
         for event in runner.events:
             if "event" in event:
-                print(event["event"])
+                self.__logger.debug(event["event"])
         state = self.__container.execute_method(
             self.__wrapper, "verify", [self.__state]
         )

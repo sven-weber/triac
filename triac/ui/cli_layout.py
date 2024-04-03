@@ -1,8 +1,11 @@
 import logging
 import time
+from typing import Optional, Union
 
 from art import text2art
 from rich.align import Align
+from rich.console import Console
+from rich.containers import Lines
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
@@ -13,6 +16,37 @@ from triac.types.execution import Execution
 from triac.ui.log_handler import UILoggingHandler
 
 
+class VerticalOverflowText(Text):
+    """
+    Custom text element that shows the text tail when the text is overflowed
+    """
+    def wrap(
+        self,
+        console: "Console",
+        width: int,
+        *,
+        justify: Optional["JustifyMethod"] = None,
+        overflow: Optional["OverflowMethod"] = None,
+        tab_size: int = 8,
+        no_wrap: Optional[bool] = None,
+    ) -> Lines :
+        # Call sub wrapped
+        wrapped = super().wrap(
+            console,
+            width,
+            justify=justify,
+            overflow=overflow,
+            tab_size=tab_size,
+            no_wrap=no_wrap,
+        )
+
+        # If there are too many lines, show the tail
+        if console.height < len(wrapped):
+            overflow_elem = Text("...")
+            return [overflow_elem] + wrapped[len(wrapped) - console.height -1 : ]
+        else:
+            return wrapped
+
 class CLILayout:
 
     def __init__(self, state: Execution):
@@ -20,7 +54,7 @@ class CLILayout:
 
         # Fixed UI elements
         self.__logo = Panel(Align.center(text2art("TRIaC"), vertical="middle"))
-        self.__log_output = Text()
+        self.__log_output = VerticalOverflowText()
 
         # Enable log capturing
         logging.basicConfig(
@@ -43,17 +77,18 @@ class CLILayout:
 
         stats_table.add_row("Base Image", str(self.__state.base_image.name))
         stats_table.add_row("Runtime", self.format_timedelta())
+        # TODO: Fix
         stats_table.add_row(
-            "Rounds", f"{self.__state.round}/{self.__state.total_rounds}"
+            "Wrapper", f"{self.__state.round}/{self.__state.total_rounds}"
+        )
+        stats_table.add_row(
+            "Round", f"{self.__state.round}/{self.__state.total_rounds}"
         )
         stats_table.add_row(
             Text("Errors", style="bold red"),
             Text(str(self.__state.errors), style="bold red"),
         )
-        stats_table.add_row(
-            Text("Log Level"),
-            Text(str(self.__state.log_level))
-        )
+        stats_table.add_row(Text("Log Level"), Text(str(self.__state.log_level)))
         statistics = Layout(stats_table)
 
         stats = Panel(statistics, title="Statistics")

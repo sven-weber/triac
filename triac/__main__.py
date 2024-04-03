@@ -20,6 +20,7 @@ from triac.wrappers.file import File
 
 
 def exec_fuzzing(state: Execution):
+    logger = logging.getLogger(__name__)
     user = UserType()
 
     docker = DockerClient()
@@ -31,9 +32,11 @@ def exec_fuzzing(state: Execution):
     container = docker.run_container_from_image(image)
 
     state = wrappers.append(wrapper, container)
-    print("wanted", state)
+    logger.info("wanted")
+    logger.info(state)
     ansible = Ansible(wrapper, state, container)
-    print("obtained", ansible.run())
+    logger.info("obtained")
+    logger.info(ansible.run())
 
     image = docker.commit_container_to_image(container)
     docker.remove_container(container)
@@ -44,7 +47,6 @@ def exec_fuzzing(state: Execution):
 def generate_execution(rounds, base_image, log_level):
     # Get the base image
     if base_image != None:
-        print(base_image)
         BaseImages[base_image]
     else:
         base_image = Fuzzer().fuzz_base_image()
@@ -76,11 +78,6 @@ def fuzz(rounds, log_level, base_image):
 
     # initialize the UI
     ui = CLILayout(state)
-
-    log = logging.getLogger(__name__)
-    log.debug("DEBUG")
-    log.info("Hello, World!")
-    log.error("SOME ERRROR!")
 
     # Start the threads to display the UI and computation
     fuzz_worker = Thread(target=exec_fuzzing, args=(state,))
