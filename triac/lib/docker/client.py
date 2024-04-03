@@ -4,10 +4,16 @@ from os import getcwd
 import os
 from os.path import dirname, join
 import tarfile
+from typing import List
 
 import docker
 
-from triac.lib.docker.const import TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR, TRIAC_WORKING_DIR
+from triac.lib.docker.const import (
+    TRIAC_DIR_IN_REPO,
+    TRIAC_SRC_DIR,
+    TRIAC_WORKING_DIR,
+    get_image_identifier,
+)
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
 
@@ -20,15 +26,12 @@ class DockerClient:
     def get_client(self):
         return self._client
 
-    def get_image_identifier(self, img: BaseImages):
-        return f"triac:{img}"
-
     # Returns the build image
     def build_base_image(self, img: BaseImages):
         self.__logger.info(f"Building base image {img.name}")
         docker_file_path = join(dirname(__file__), "images", img.value)
         repository_root = getcwd()
-        image_identifier = self.get_image_identifier(img)
+        image_identifier = get_image_identifier(img)
         self.get_client().images.build(
             path=repository_root,
             dockerfile=docker_file_path,
@@ -51,7 +54,7 @@ class DockerClient:
                 directory = tarfile.TarInfo(name=TRIAC_WORKING_DIR)
                 directory.type = tarfile.DIRTYPE
                 tar.addfile(directory)
-            mem_stream.seek(0) # Back to beginning of the stream
+            mem_stream.seek(0)  # Back to beginning of the stream
             container.put_archive("/", mem_stream)
             return True
 
@@ -94,4 +97,4 @@ class DockerClient:
         self.__logger.debug(f"Container with id {container.id} removed")
 
     def remove_image(self, image: str):
-        self.get_client().images.remove(image)
+        self.get_client().images.remove(image, noprune=False)

@@ -12,12 +12,14 @@ class Execution:
     def __init__(
         self,
         user_preferred_base_image: Any,
+        keep_base_images: bool,
         total_rounds: int,
         wrappers_per_round: int,
         log_level: str,
     ) -> None:
         self.__fuzzer = Fuzzer()
         self.__user_preferred_base_image = user_preferred_base_image
+        self.__keep_base_images = keep_base_images
         self.__total_rounds = total_rounds
         self.__wrappers_per_round = wrappers_per_round
         self.__log_level = log_level
@@ -28,7 +30,7 @@ class Execution:
         self.__wrappers = Wrappers(None, [])
 
     def wrappers_left_in_round(self) -> bool:
-        return self.__wrappers.count < self.__wrappers_per_round 
+        return self.__wrappers.count < self.__wrappers_per_round
 
     def add_wrapper_to_round(self, wrapper: Wrapper, container: Container) -> State:
         return self.__wrappers.append(wrapper, container)
@@ -37,10 +39,9 @@ class Execution:
         return self.round < self.total_rounds
 
     def start_new_round(self):
-        assert(self.rounds_left() == True)
+        assert self.rounds_left() == True
 
         new_base = self.get_next_base_image()
-        self.__used_docker_images.add(new_base)
         self.__wrappers = Wrappers(new_base, [])
         self.__round += 1
 
@@ -51,12 +52,16 @@ class Execution:
         else:
             return self.__fuzzer.fuzz_base_image()
 
-    def add_image_to_used(self, img : str) -> None:
+    def add_image_to_used(self, img: str) -> None:
         self.__used_docker_images.add(img)
 
     @property
     def base_image(self) -> str:
         return self.__wrappers.base_image
+
+    @property
+    def keep_base_images(self) -> bool:
+        return self.__keep_base_images
 
     @property
     def total_rounds(self) -> int:
@@ -65,7 +70,7 @@ class Execution:
     @property
     def round(self) -> int:
         return self.__round
-    
+
     @property
     def wrappers_per_round(self) -> int:
         return self.__wrappers_per_round
@@ -73,7 +78,7 @@ class Execution:
     @property
     def num_wrappers_in_round(self) -> int:
         return self.__wrappers.count
-    
+
     @property
     def used_docker_images(self) -> Set[str]:
         return self.__used_docker_images

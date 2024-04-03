@@ -22,7 +22,7 @@ class Container:
     @property
     def base_obj(self):
         return self.__base_obj
-    
+
     def __get_runner_path(self):
         file_dirname = realpath(join(dirname(__file__), ".."))
         relative_path_to_lib_docker = relpath(

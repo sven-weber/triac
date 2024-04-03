@@ -44,7 +44,7 @@ class VerticalOverflowText(Text):
 
         # If there are too many lines, show the tail
         if console.height < len(wrapped):
-            return [ Text("...") ] + wrapped[len(wrapped) - console.height - 1 :]
+            return [Text("...")] + wrapped[len(wrapped) - console.height - 1 :]
         else:
             return wrapped
 
@@ -79,7 +79,8 @@ class CLILayout:
 
         stats_table.add_row("Runtime", self.format_timedelta())
         stats_table.add_row(
-            "Wrapper", f"{self.__state.num_wrappers_in_round}/{self.__state.wrappers_per_round}"
+            "Wrapper",
+            f"{self.__state.num_wrappers_in_round}/{self.__state.wrappers_per_round}",
         )
         stats_table.add_row(
             "Round", f"{self.__state.round}/{self.__state.total_rounds}"
@@ -89,7 +90,14 @@ class CLILayout:
             Text(str(self.__state.errors), style="bold red"),
         )
         stats_table.add_row("Log Level", str(self.__state.log_level))
-        stats_table.add_row("Base Image", "" if self.__state.base_image is None else str(self.__state.base_image.name))
+        stats_table.add_row(
+            "Base Image",
+            (
+                ""
+                if self.__state.base_image is None
+                else str(self.__state.base_image.name)
+            ),
+        )
         statistics = Layout(stats_table)
 
         stats = Panel(statistics, title="Statistics")
@@ -122,6 +130,5 @@ class CLILayout:
                 # Stop if cancellation is requested
                 if stop_event.is_set():
                     break
-                
+
                 time.sleep(0.5)
-                
