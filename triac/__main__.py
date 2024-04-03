@@ -1,8 +1,8 @@
-from asyncio import Event
 import logging
 import random
 import sys
 import time
+from asyncio import Event
 from threading import Thread
 
 import click
@@ -10,8 +10,10 @@ import click
 from triac.lib.docker.client import DockerClient
 from triac.lib.docker.const import get_base_image_identifiers
 from triac.lib.docker.types.base_images import BaseImages
+from triac.lib.errors import persist_error
 from triac.lib.generator.ansible import Ansible
 from triac.lib.random import Fuzzer
+from triac.types.errors import StateMismatchError
 from triac.types.execution import Execution
 from triac.types.target import Target
 from triac.types.wrappers import Wrappers
@@ -22,20 +24,21 @@ from triac.wrappers.file import File
 
 
 def exec_fuzzing_round(execution: Execution):
-    logger = logging.getLogger(__name__)
-    docker = DockerClient()
-
     # Start new round
     execution.start_new_round()
+    logger = logging.getLogger(__name__)
     logger.info(
-        f"Starting fuzzing round {execution.round} on image {execution.base_image.name}"
+        f"***** Starting fuzzing round {execution.round} on image {execution.base_image.name} *****"
     )
+    docker = DockerClient()
 
     # Build the base image
     image = docker.build_base_image(execution.base_image)
     execution.add_image_to_used(image)
 
     while execution.wrappers_left_in_round():
+        logger.info(f"---- Executing wrapper #{execution.num_wrappers_in_round}")
+
         # TODO: Do this with multiple tools to enable differential testing
         container = docker.run_container_from_image(image)
 
@@ -46,15 +49,19 @@ def exec_fuzzing_round(execution: Execution):
 
             # Instantiate target state
             target_state = execution.add_wrapper_to_round(wrapper, container)
-            logger.info("target state:")
-            logger.info(target_state)
 
             # Execute IaC tool
+            logger.info(f"Executing Ansible against target")
             is_state = Ansible(wrapper, target_state, container).run()
-            logger.info("obtained state:")
-            logger.info(is_state)
 
-            # TODO: state comparison and error finding
+            logger.debug(f"Got the following actual state:")
+            logger.debug(is_state)
+
+            # Check states for equality
+            if is_state != target_state:
+                raise StateMismatchError(target_state, is_state)
+
+            logger.info(f"Target state reached, wrapper finished")
 
             # Commit container for next round then remove
             image = docker.commit_container_to_image(container)
@@ -65,12 +72,29 @@ def exec_fuzzing_round(execution: Execution):
 
 def exec_fuzzing(execution: Execution, stop_event: Event):
     logger = logging.getLogger(__name__)
-    docker = DockerClient()
 
     # Execute all the rounds
     while execution.rounds_left():
-        # TODO: Error handling
-        exec_fuzzing_round(execution)
+        try:
+            exec_fuzzing_round(execution)
+        except StateMismatchError as e:
+            logger.error("Found mismatch between target and actual state")
+            logger.error("Target state:")
+            logger.error(e.target)
+            logger.error("Actual state:")
+            logger.error(e.actual)
+            execution.set_error_for_round(e.target, e.actual)
+            persist_error(execution, e)
+        except Exception as e:
+            logger.error("Encountered unexpected error during execution of round:")
+            logger.error(e)
+            if execution.continue_on_error == False:
+                logger.error("Press any key to continue with the next round...")
+                input()
+            else:
+                logger.error("Executing next round")
+
+    logger.info("All rounds executed")
 
     # Cleanup
     # TODO: Also delete base images (e.g. debian:12?
@@ -84,10 +108,13 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
     )
     for image in to_remove:
         logger.debug(f"Removing image {image}")
+        docker = DockerClient()
         docker.remove_image(image)
 
     # Done!
     logger.info("Execution finished")
+
+    time.sleep(1)
 
 
 @click.command()
@@ -123,13 +150,34 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
     default=False,
     show_default=True,
 )
-def fuzz(rounds, wrappers_per_round, log_level, base_image, keep_base_images):
+@click.option(
+    "--continue-on-error",
+    help="Whether triac should automatically continue with the execution of the next round whenever a unexpected error is encountered.",
+    is_flag=True,
+    default=False,
+    show_default=True,
+)
+def fuzz(
+    rounds,
+    wrappers_per_round,
+    log_level,
+    base_image,
+    keep_base_images,
+    continue_on_error,
+):
     """Start a TRIaC fuzzing session"""
 
     # Generate execution
     state = Execution(
-        base_image, keep_base_images, rounds, wrappers_per_round, log_level
+        base_image,
+        keep_base_images,
+        rounds,
+        wrappers_per_round,
+        log_level,
+        continue_on_error,
     )
+
+    # Todo: Enable replay
 
     # Stop event
     # TODO: Handle interruption
@@ -146,7 +194,7 @@ def fuzz(rounds, wrappers_per_round, log_level, base_image, keep_base_images):
     ui_worker.start()
 
     fuzz_worker.join()
-    event.set()  # Set the when the worker finished to close the UI
+    event.set()  # Set event when the worker finished to close the UI
 
     ui_worker.join()
 

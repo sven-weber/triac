@@ -31,13 +31,13 @@ class Wrappers:
     ) -> None:
         self.__base_image = base_image
         self.__data = data
+        self.__has_error = False
+        self.__error_target = {}
+        self.__error_actual = {}
         pass
 
-    def save(self, dest: str) -> None:
-        file = open(dest, "w")
-        file.write(encode(self))
-        file.close()
-        pass
+    def encode(self) -> str:
+        return encode(self)
 
     @property
     def count(self) -> int:
@@ -46,6 +46,11 @@ class Wrappers:
     @property
     def target_states(self) -> List[Tuple[Identifier, State]]:
         return self.__data
+
+    def set_error_state(self, target: State, actual: State) -> None:
+        self.__has_error = True
+        self.__error_target = target
+        self.__error_actual = actual
 
     def append(self, wrapper: Wrapper, container: Container) -> State:
         identifier = Identifier(wrapper)

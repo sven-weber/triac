@@ -1,19 +1,19 @@
-from asyncio import Event
 import logging
 import time
+from asyncio import Event
 from typing import Optional, Union
 
 from art import text2art
+from rich import box
 from rich.align import Align
 from rich.console import Console
 from rich.containers import Lines
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
+from rich.pretty import Pretty
 from rich.table import Table
 from rich.text import Text
-from rich.pretty import Pretty
-from rich import box
 
 from triac.types.execution import Execution
 from triac.ui.log_handler import UILoggingHandler

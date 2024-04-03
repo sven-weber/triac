@@ -1,19 +1,15 @@
 import io
 import logging
-from os import getcwd
 import os
-from os.path import dirname, join
 import tarfile
+from os import getcwd
+from os.path import dirname, join
 from typing import List
 
 import docker
 
-from triac.lib.docker.const import (
-    TRIAC_DIR_IN_REPO,
-    TRIAC_SRC_DIR,
-    TRIAC_WORKING_DIR,
-    get_image_identifier,
-)
+from triac.lib.docker.const import (TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR,
+                                    TRIAC_WORKING_DIR, get_image_identifier)
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
 

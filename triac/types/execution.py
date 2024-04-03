@@ -16,6 +16,7 @@ class Execution:
         total_rounds: int,
         wrappers_per_round: int,
         log_level: str,
+        continue_on_error: bool,
     ) -> None:
         self.__fuzzer = Fuzzer()
         self.__user_preferred_base_image = user_preferred_base_image
@@ -23,6 +24,7 @@ class Execution:
         self.__total_rounds = total_rounds
         self.__wrappers_per_round = wrappers_per_round
         self.__log_level = log_level
+        self.__continue_on_error = continue_on_error
         self.__start_time = datetime.now()
         self.__used_docker_images = set()
         self.__round = 0
@@ -54,6 +56,17 @@ class Execution:
 
     def add_image_to_used(self, img: str) -> None:
         self.__used_docker_images.add(img)
+
+    def set_error_for_round(self, target: State, actual: State):
+        self.__errors += 1
+        self.__wrappers.set_error_state(target, actual)
+
+    def encode_wrappers_for_round(self) -> str:
+        return self.__wrappers.encode()
+
+    @property
+    def continue_on_error(self) -> bool:
+        return self.__continue_on_error
 
     @property
     def base_image(self) -> str:

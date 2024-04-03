@@ -2,6 +2,7 @@ import logging
 import logging.config
 from logging import LogRecord
 
+from rich.pretty import Pretty
 from rich.text import Text
 
 
@@ -22,16 +23,15 @@ class UILoggingHandler(logging.Handler):
             # See if it is one of the explicitly allowed modules
             return record.name.split(".")[0] in self.__allowed_modules
 
-    def get_record_rich_format(self, record: LogRecord) -> str:
-        if record.levelno >= 40:  # Error and above
-            return "bold red"
-        else:
-            return ""
-
     def emit(self, record):
         if self.should_handle_record(record) == False:
             return
 
-        # Format the log message and append it to the console
-        log_message = self.format(record)
-        self.__console.append(log_message, style=self.get_record_rich_format(record))
+        formatted = self.format(record)
+
+        # Append the record
+        if record.levelno >= 40:
+            # Error and above
+            self.__console.append(formatted, style="bold red")
+        else:
+            self.__console.append(formatted)
