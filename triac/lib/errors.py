@@ -21,8 +21,10 @@ def get_path_to_errors() -> str:
 
 def pretty_print_state(state: State) -> str:
     console = Console(record=True)
-    console.print(state)
-    return console.export_text(clear=True)
+    with console.capture() as capture:
+        console.print(state)
+    return str(console.export_text())
+
 
 def persist_error(execution: Execution, e: StateMismatchError) -> None:
     folder = get_path_to_errors()
@@ -42,16 +44,22 @@ def persist_error(execution: Execution, e: StateMismatchError) -> None:
     target_pretty = pretty_print_state(e.target)
     actual_pretty = pretty_print_state(e.actual)
 
-    #Create diff and dump it into the file
-    
+    # Get diff
+    json_diff = DeepDiff(e.target, e.actual).to_json()
+
+    # Load back into json and then merge with target
+    # and actual. Not the cleanest way to do this,
+    # but I did not found any other way that works
+    # reliably. DeepDiff.to_dict and then json.dumps
+    # does not work because some elements need to be
+    # converted in order to be valid in json
+    diff = json.loads(json_diff)
+
+    # Dump it into the file
     human_readable = join(folder, f"{file_name}.json")
     with open(human_readable, "w") as file:
         json.dump(
-            {
-                "target": target_pretty,
-                "actual": actual_pretty,
-                "diff": DeepDiff(e.target, e.actual),
-            },
+            {"target": target_pretty, "actual": actual_pretty, "changes": diff},
             file,
             indent=4,
         )

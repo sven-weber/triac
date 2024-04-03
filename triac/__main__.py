@@ -33,6 +33,8 @@ def exec_fuzzing_round(execution: Execution):
     docker = DockerClient()
 
     # Build the base image
+    # TODO: This fails sometimes due to time-outs to the docker registry
+    # We could easily cache if this image has been build and then use this
     image = docker.build_base_image(execution.base_image)
     execution.add_image_to_used(image)
 
@@ -87,9 +89,11 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
             persist_error(execution, e)
         except Exception as e:
             logger.error("Encountered unexpected error during execution of round:")
-            logger.error(e)
+            logger.exception(e)
+            logger.error("\n")
             if execution.continue_on_error == False:
                 logger.error("Press any key to continue with the next round...")
+                time.sleep(2)  # UI update
                 input()
             else:
                 logger.error("Executing next round")
@@ -201,4 +205,7 @@ def fuzz(
 
 if __name__ == "__main__":
     fuzz()
+    # TODO: Enable replay
+    # TODO: Delete old logs to prevent memory drain and errors when Panel becomes too big
+    # Idea: Overwrite append to only keep 100 lines max
     sys.exit(0)

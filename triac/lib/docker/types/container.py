@@ -1,8 +1,7 @@
 from os.path import commonprefix, dirname, join, realpath, relpath
 from typing import Any, List
 
-from triac.lib.docker.const import (TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR,
-                                    TRIAC_WORKING_DIR)
+from triac.lib.docker.const import TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR, TRIAC_WORKING_DIR
 from triac.lib.encoding import decode, encode
 
 
@@ -44,7 +43,12 @@ class Container:
             workdir=TRIAC_WORKING_DIR,
             cmd=f"python3 {self.__get_runner_path()} {TRIAC_SRC_DIR} {encoded_obj} {method} {encoded_args}",
         )
-        assert res[0] == 0  # Check exit code
+        # Check exit code
+        if res[0] != 0:
+            print(res[1])
+            raise AssertionError(
+                f"Execution of method in container failed. Exit code {res[0]}"
+            )
 
         # Unpickle the result
         res = decode(res[1])

@@ -35,7 +35,7 @@ all:
       ansible_port: {self.__container.ssh_port}
       ansible_user: root
       ansible_ssh_private_key_file: {self.key_path}
-      ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes "
+      ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes"
         """
 
     def __playbook(self) -> str:
@@ -70,6 +70,7 @@ all:
         )
         # TODO: use these
         # Check for failed and unreachable
+        # runner_on_failed
         for event in runner.events:
             if "event" in event:
                 self.__logger.debug(f'Ansible execution event: {event["event"]}')

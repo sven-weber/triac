@@ -1,6 +1,8 @@
 import base64
+import io
 import os
 import pickle
+from contextlib import redirect_stderr, redirect_stdout
 from glob import glob
 from os.path import join
 from sys import argv
@@ -46,12 +48,26 @@ for module in modules:
 obj = decode(argv[2])
 arguments = [decode(arg) for arg in argv[4:]]
 
-# Call the method
-method = getattr(obj, argv[3])
-if len(arguments) > 0:
-    res = method(*arguments)
-else:
-    res = method()
+# Call the method with captured stdout and stderr
+try:
+    o = io.StringIO()
+    e = io.StringIO()
+    with redirect_stdout(o):
+        with redirect_stderr(e):
+            method = getattr(obj, argv[3])
+            if len(arguments) > 0:
+                res = method(*arguments)
+            else:
+                res = method()
+except Exception as e:
+    print("Method failed with exception:")
+    print(e)
+    print("Following content was printed during execution.")
+    print("stdout:")
+    print(o.getvalue())
+    print("stderr:")
+    print(e.getvalue())
+    exit(1)
 
 # Pickle the result
 encoded_obj = encode(res)

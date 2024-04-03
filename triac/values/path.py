@@ -5,6 +5,7 @@ from random import choice, randint
 from re import match
 from typing import Any, Dict, Optional, cast
 
+from triac.lib.docker.const import TRIAC_WORKING_DIR
 from triac.lib.random import BOOLEANS, Fuzzer, probability_bound
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
@@ -19,7 +20,7 @@ class FileType(Enum):
 
 DESCENT_FACTOR = 1.5
 BACKTRACK_FACTOR = 2
-IGNORE_PATHS = "/(proc|mnt|run|dev|lib\\w*|sys|boot|srv|bin|usr/bin|\\w*sbin)"
+IGNORE_PATHS = f"/(proc|mnt|run|dev|lib\\w*|sys|boot|srv|bin|usr/bin|usr|{TRIAC_WORKING_DIR}|\\w*sbin)"
 
 
 class PathValue(BaseValue):
