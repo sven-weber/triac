@@ -1,8 +1,7 @@
 from os.path import commonprefix, dirname, join, realpath, relpath
 from typing import Any, List
 
-from triac.lib.docker.const import (TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR,
-                                    TRIAC_WORKING_DIR)
+from triac.lib.docker.const import TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR, TRIAC_WORKING_DIR
 from triac.lib.encoding import decode, encode
 
 
@@ -23,7 +22,7 @@ class Container:
     @property
     def base_obj(self):
         return self.__base_obj
-
+    
     def __get_runner_path(self):
         file_dirname = realpath(join(dirname(__file__), ".."))
         relative_path_to_lib_docker = relpath(

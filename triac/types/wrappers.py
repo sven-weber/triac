@@ -36,6 +36,10 @@ class Wrappers:
         file.close()
         pass
 
+    @property
+    def count(self) -> int:
+        return len(self.__data)
+
     def append(self, wrapper: Wrapper, container: Container) -> State:
         identifier = Identifier(wrapper)
         state = Fuzzer.fuzz_state(wrapper.definition(), container)

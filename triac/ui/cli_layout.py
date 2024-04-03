@@ -1,3 +1,4 @@
+from asyncio import Event
 import logging
 import time
 from typing import Optional, Union
@@ -20,6 +21,7 @@ class VerticalOverflowText(Text):
     """
     Custom text element that shows the text tail when the text is overflowed
     """
+
     def wrap(
         self,
         console: "Console",
@@ -29,7 +31,7 @@ class VerticalOverflowText(Text):
         overflow: Optional["OverflowMethod"] = None,
         tab_size: int = 8,
         no_wrap: Optional[bool] = None,
-    ) -> Lines :
+    ) -> Lines:
         # Call sub wrapped
         wrapped = super().wrap(
             console,
@@ -42,10 +44,10 @@ class VerticalOverflowText(Text):
 
         # If there are too many lines, show the tail
         if console.height < len(wrapped):
-            overflow_elem = Text("...")
-            return [overflow_elem] + wrapped[len(wrapped) - console.height -1 : ]
+            return [ Text("...") ] + wrapped[len(wrapped) - console.height - 1 :]
         else:
             return wrapped
+
 
 class CLILayout:
 
@@ -75,11 +77,9 @@ class CLILayout:
         stats_table.add_column("name")
         stats_table.add_column("value")
 
-        stats_table.add_row("Base Image", str(self.__state.base_image.name))
         stats_table.add_row("Runtime", self.format_timedelta())
-        # TODO: Fix
         stats_table.add_row(
-            "Wrapper", f"{self.__state.round}/{self.__state.total_rounds}"
+            "Wrapper", f"{self.__state.num_wrappers_in_round}/{self.__state.wrappers_per_round}"
         )
         stats_table.add_row(
             "Round", f"{self.__state.round}/{self.__state.total_rounds}"
@@ -88,7 +88,8 @@ class CLILayout:
             Text("Errors", style="bold red"),
             Text(str(self.__state.errors), style="bold red"),
         )
-        stats_table.add_row(Text("Log Level"), Text(str(self.__state.log_level)))
+        stats_table.add_row("Log Level", str(self.__state.log_level))
+        stats_table.add_row("Base Image", "" if self.__state.base_image is None else str(self.__state.base_image.name))
         statistics = Layout(stats_table)
 
         stats = Panel(statistics, title="Statistics")
@@ -111,10 +112,16 @@ class CLILayout:
 
         return layout
 
-    def render_ui(self):
+    def render_ui(self, stop_event: Event):
         # Generate the fixed parts
         with Live(self.generate_cli_layout(), auto_refresh=False) as live:
             while True:
                 # Refresh the UI layout
                 live.update(self.generate_cli_layout(), refresh=True)
-                time.sleep(0.1)
+
+                # Stop if cancellation is requested
+                if stop_event.is_set():
+                    break
+                
+                time.sleep(0.5)
+                
