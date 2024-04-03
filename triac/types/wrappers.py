@@ -39,7 +39,7 @@ class Wrappers:
     def append(self, wrapper: Wrapper, container: Container) -> State:
         identifier = Identifier(wrapper)
         state = Fuzzer.fuzz_state(wrapper.definition(), container)
-        self.data.append((identifier, state))
+        self.__data.append((identifier, state))
         return state
 
     @property

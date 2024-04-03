@@ -5,9 +5,10 @@ from triac.types.wrappers import Wrappers
 
 
 class Execution:
-    def __init__(self, base_image: BaseImages, num_rounds: int) -> None:
+    def __init__(self, base_image: BaseImages, num_rounds: int, log_level: str) -> None:
         self.__wrappers = Wrappers(base_image, [])
         self.__rounds = num_rounds
+        self.__log_level = log_level
         self.__start_time = datetime.now()
         self.__round = 0
         self.__errors = 0
@@ -21,6 +22,10 @@ class Execution:
     def total_rounds(self) -> int:
         return self.__rounds
 
+    @property
+    def log_level(self) -> str:
+        return self.__log_level
+    
     @property
     def elapsed_time(self) -> any:
         current_time = datetime.now()
