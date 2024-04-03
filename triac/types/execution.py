@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Any, Set
+from typing import Any, List, Set, Tuple
 
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
 from triac.lib.random import Fuzzer
 from triac.types.wrapper import State, Wrapper
-from triac.types.wrappers import Wrappers
+from triac.types.wrappers import Identifier, Wrappers
 
 
 class Execution:
@@ -62,6 +62,10 @@ class Execution:
     @property
     def keep_base_images(self) -> bool:
         return self.__keep_base_images
+
+    @property
+    def target_states(self) -> List[Tuple[Identifier, State]]:
+        return self.__wrappers.target_states
 
     @property
     def total_rounds(self) -> int:

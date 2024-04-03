@@ -11,6 +11,9 @@ class BaseValue(ABC, Generic[T]):
         self.val = val
         super().__init__()
 
+    def __repr__(self):
+        return f"{self.val}"
+
     @abstractmethod
     def transform(self, target: Target) -> str:
         pass

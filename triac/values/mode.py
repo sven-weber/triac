@@ -17,6 +17,25 @@ class Permission(Enum):
     XW = 6
     XWR = 7
 
+    def __str__(self) -> str:
+        match self:
+            case Permission.NONE:
+                return "---"
+            case Permission.R:
+                return "r--"
+            case Permission.W:
+                return "-w-"
+            case Permission.RW:
+                return "rw-"
+            case Permission.X:
+                return "--x"
+            case Permission.XR:
+                return "r-x"
+            case Permission.XW:
+                return "-wx"
+            case Permission.XWR:
+                return "rwx"
+
 
 class Mode:
     def __init__(self, user: Permission, group: Permission, others: Permission) -> None:
@@ -35,6 +54,9 @@ class Mode:
     @property
     def others(self) -> Permission:
         return self.__others
+
+    def __repr__(self):
+        return f"u: {str(self.__user)} g: {str(self.__group)} o: {str(self.__others)}"
 
 
 def parse_mode(mode: int) -> Mode:

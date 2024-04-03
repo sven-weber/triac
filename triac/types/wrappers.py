@@ -17,6 +17,9 @@ class Identifier:
     def mod(self) -> str:
         return self.__mod
 
+    def __repr__(self):
+        return f"{self.__cls}"
+
     @property
     def cls(self) -> str:
         return self.__cls
@@ -39,6 +42,10 @@ class Wrappers:
     @property
     def count(self) -> int:
         return len(self.__data)
+
+    @property
+    def target_states(self) -> List[Tuple[Identifier, State]]:
+        return self.__data
 
     def append(self, wrapper: Wrapper, container: Container) -> State:
         identifier = Identifier(wrapper)

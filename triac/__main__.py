@@ -73,6 +73,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
         exec_fuzzing_round(execution)
 
     # Cleanup
+    # TODO: Also delete base images (e.g. debian:12?
     logger.info("Cleaning up resources")
     logger.debug("The following images where used during execution:")
     logger.debug(execution.used_docker_images)
@@ -131,6 +132,7 @@ def fuzz(rounds, wrappers_per_round, log_level, base_image, keep_base_images):
     )
 
     # Stop event
+    # TODO: Handle interruption
     event = Event()
 
     # initialize the UI

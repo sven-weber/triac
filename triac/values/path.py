@@ -34,6 +34,9 @@ class PathValue(BaseValue):
         else:
             raise UnsupportedTargetValueError(target, self)
 
+    def __repr__(self):
+        return super().__repr__()
+
 
 class NoPathError(Exception):
     def __init__(self, existing: bool, filetype: FileType):

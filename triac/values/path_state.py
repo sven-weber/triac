@@ -32,6 +32,9 @@ class PathStateValue(BaseValue):
     def state(self) -> PathState:
         return self.__state
 
+    def __repr__(self):
+        return f"[{self.__state.value}] {self.val.__repr__()}"
+
     def transform(self, target: Target) -> str:
         return self.val.transform(target)
 

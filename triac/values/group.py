@@ -20,6 +20,9 @@ class Group:
     def gid(self) -> int:
         return self.__gid
 
+    def __repr__(self):
+        return f"[name]: {self.__name}, [id]: {self.__gid}"
+
 
 class GroupValue(BaseValue):
     def __init__(self, val: Group) -> None:

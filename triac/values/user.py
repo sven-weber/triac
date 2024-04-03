@@ -35,10 +35,16 @@ class User:
     def shell(self) -> str:
         return self.__shell
 
+    def __repr__(self):
+        return f"[name]: {self.__name} [uid]: {self.__uid}"
+
 
 class UserValue(BaseValue):
     def __init__(self, val: User) -> None:
         super().__init__(val)
+
+    def __repr__(self):
+        return f"{self.val.__repr__()}"
 
     def transform(self, target: Target) -> str:
         if target == Target.ANSIBLE:
