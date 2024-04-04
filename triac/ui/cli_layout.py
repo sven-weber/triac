@@ -73,7 +73,9 @@ class CLILayout:
         minutes, seconds = divmod(remainder, 60)
         return "{:02}h{:02}m{:02}s".format(hours, minutes, seconds)
 
-    def generate_cli_layout(self, execution_finished: bool) -> Layout:
+    def generate_cli_layout(
+        self, execution_finished: bool, execution_canceled: bool
+    ) -> Layout:
         # Statistics
 
         # First table
@@ -116,7 +118,9 @@ class CLILayout:
         stats = Panel(statistics, title="Statistics")
 
         # Status
-        if execution_finished:
+        if execution_canceled:
+            status_text = Text("CANCELED", style="bold yellow")
+        elif execution_finished:
             status_text = Text("FINISHED", style="bold dark_green")
         else:
             status_text = Text("RUNNING", style="bold dark_orange")
@@ -173,14 +177,20 @@ class CLILayout:
 
         return layout
 
-    def render_ui(self, stop_event: Event):
+    def render_ui(self, stop_event: Event, canceled_event: Event):
         # Generate the fixed parts
         with Live(
-            self.generate_cli_layout(stop_event.is_set()), auto_refresh=False
+            self.generate_cli_layout(stop_event.is_set(), canceled_event.is_set()),
+            auto_refresh=False,
         ) as live:
             while True:
                 # Refresh the UI layout
-                live.update(self.generate_cli_layout(stop_event.is_set()), refresh=True)
+                live.update(
+                    self.generate_cli_layout(
+                        stop_event.is_set(), canceled_event.is_set()
+                    ),
+                    refresh=True,
+                )
 
                 # Stop if cancellation is requested
                 if stop_event.is_set():

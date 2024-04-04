@@ -1,5 +1,6 @@
 import logging
 import random
+import signal
 import sys
 import time
 from asyncio import Event
@@ -23,7 +24,7 @@ from triac.values.user import UserType
 from triac.wrappers.file import File
 
 
-def exec_fuzzing_round(execution: Execution):
+def exec_fuzzing_round(execution: Execution, stop_event: Event):
     # Start new round
     execution.start_new_round()
     logger = logging.getLogger(__name__)
@@ -38,23 +39,34 @@ def exec_fuzzing_round(execution: Execution):
     image = docker.build_base_image(execution.base_image)
     execution.add_image_to_used(image)
 
+    if stop_event.is_set():
+        return
+
     while execution.wrappers_left_in_round():
+        if stop_event.is_set():
+            return
         logger.info(f"---- Executing wrapper #{execution.num_wrappers_in_round}")
 
         # TODO: Do this with multiple tools to enable differential testing
         container = docker.run_container_from_image(image)
 
         try:
+            if stop_event.is_set():
+                return
             # Randomly choose next wrapper and execute
             # TODO: Randomly choose wrapper
             wrapper = File()
 
             # Instantiate target state
             target_state = execution.add_wrapper_to_round(wrapper, container)
+            if stop_event.is_set():
+                return
 
             # Execute IaC tool
             logger.info(f"Executing Ansible against target")
             is_state = Ansible(wrapper, target_state, container).run()
+            if stop_event.is_set():
+                return
 
             logger.debug(f"Got the following actual state:")
             logger.debug(is_state)
@@ -64,6 +76,8 @@ def exec_fuzzing_round(execution: Execution):
                 raise StateMismatchError(target_state, is_state)
 
             logger.info(f"Target state reached, wrapper finished")
+            if stop_event.is_set():
+                return
 
             # Commit container for next round then remove
             image = docker.commit_container_to_image(container)
@@ -76,9 +90,9 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
     logger = logging.getLogger(__name__)
 
     # Execute all the rounds
-    while execution.rounds_left():
+    while execution.rounds_left() and stop_event.is_set() == False:
         try:
-            exec_fuzzing_round(execution)
+            exec_fuzzing_round(execution, stop_event)
         except StateMismatchError as e:
             logger.error("Found mismatch between target and actual state")
             logger.error("Target state:")
@@ -91,14 +105,16 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
             logger.error("Encountered unexpected error during execution of round:")
             logger.exception(e)
             logger.error("\n")
-            if execution.continue_on_error == False:
-                logger.error("Press any key to continue with the next round...")
-                time.sleep(2)  # UI update
-                input()
-            else:
-                logger.error("Executing next round")
+            if stop_event.set == False:
+                if execution.continue_on_error == False:
+                    logger.error("Press any key to continue with the next round...")
+                    time.sleep(2)  # UI update
+                    input()
+                else:
+                    logger.error("Executing next round")
 
-    logger.info("All rounds executed")
+    if stop_event.is_set() == False:
+        logger.info("All rounds executed")
 
     # Cleanup
     # TODO: Also delete base images (e.g. debian:12?
@@ -116,7 +132,10 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
         docker.remove_image(image)
 
     # Done!
-    logger.info("Execution finished")
+    if stop_event.is_set():
+        logger.info("***** Execution stopped *****")
+    else:
+        logger.info("***** Execution finished *****")
 
     time.sleep(1)
 
@@ -181,24 +200,38 @@ def fuzz(
         continue_on_error,
     )
 
-    # Todo: Enable replay
+    # TODO: Enable replay
 
-    # Stop event
-    # TODO: Handle interruption
-    event = Event()
+    # Stop events
+    ui_stop = Event()
+    fuzz_stop = Event()
+
+    # Capture STRG+C (interrupts)
+    def interrupt_handler(*args):
+        fuzz_stop.set()
+        logger = logging.getLogger(__name__)
+        logger.error("Execution cancellation requested, stopping current execution....")
+
+    signal.signal(signal.SIGINT, interrupt_handler)
 
     # initialize the UI
     ui = CLILayout(state)
 
     # Start the threads to display the UI and computation
-    fuzz_worker = Thread(target=exec_fuzzing, args=(state, event))
-    ui_worker = Thread(target=ui.render_ui, args=(event,))
+    fuzz_worker = Thread(target=exec_fuzzing, args=(state, fuzz_stop))
+    ui_worker = Thread(
+        target=ui.render_ui,
+        args=(
+            ui_stop,
+            fuzz_stop,
+        ),
+    )
 
     fuzz_worker.start()
     ui_worker.start()
 
     fuzz_worker.join()
-    event.set()  # Set event when the worker finished to close the UI
+    ui_stop.set()  # Set event when the worker finished to close the UI
 
     ui_worker.join()
 
