@@ -38,10 +38,7 @@ class VerticalOverflowText(Text):
         # When we pass along the parameters this
         # Crashes sometimes. And it seems to be working
         # fine without passing them along so.
-        wrapped = super().wrap(
-            console,
-            width
-        )
+        wrapped = super().wrap(console, width)
 
         # If there are too many lines, show the tail
         if console.height < len(wrapped):

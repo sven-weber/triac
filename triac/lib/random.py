@@ -1,9 +1,11 @@
+import random
 from random import choice
 from typing import Any, Dict, List
 
+
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
-from triac.types.wrapper import Definition, State
+from triac.types.wrapper import Definition, State, Wrapper
 
 BOOLEANS = [True, False]
 
@@ -33,3 +35,21 @@ class Fuzzer:
     @staticmethod
     def fuzz_base_image() -> BaseImages:
         return choice([val for val in BaseImages])
+
+    @staticmethod
+    @staticmethod
+    def fuzz_wrapper(current: Wrapper, options: List[type[Wrapper]]) -> Wrapper:
+        """
+        Randomly chooses the next wrapper to be executed.
+        """
+        # Choose the same with 60% probability and a new one with 40%
+        if random.uniform(0, 1) <= 0.6 and current != None:
+            return current
+        else:
+            if (len(options) > 1):
+                options = [i for i in options if type(current) != i]
+
+            # Do a choice out of the list
+            choice = random.choice(options)
+            print(choice)
+            return choice()

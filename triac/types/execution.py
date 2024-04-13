@@ -1,4 +1,8 @@
+import glob
+import logging
 from datetime import datetime
+from os import getcwd
+from os.path import join
 from typing import Any, List, Set, Tuple
 
 from triac.lib.docker.types.base_images import BaseImages
@@ -31,6 +35,32 @@ class Execution:
         self.__errors = 0
         self.__wrappers = Wrappers(None, [])
 
+    def load_list_of_wrapper_classes(self) -> List[type[Wrapper]]:
+        logger = logging.getLogger(__name__)
+        logger.info(f"Loading available wrappers for fuzzing")
+
+        self.__available_wrappers = []
+        repository_root = getcwd() + "/"
+        modules = glob.glob(join(repository_root, "triac", "wrappers", "*.py"))
+        modules = list(map(lambda f: f.replace(repository_root, ""), modules))
+
+        # Import the modules
+        for module in modules:
+            import_path = module.replace("/", ".").replace(".py", "")
+            mod = __import__(import_path, fromlist=[None])
+            class_name = import_path.split(".")[-1].capitalize()
+            try:
+                loaded_class = getattr(mod, class_name)
+                self.__available_wrappers.append(loaded_class)
+                logger.debug(f"Loaded triac module {class_name} from {import_path}")
+            except:
+                logger.error(
+                    f"Could not load wrapper module from {import_path}, assuming class name {class_name}"
+                )
+
+        logger.info(f"Loaded {len(self.__available_wrappers )} wrappers for fuzzing")
+        return self.__available_wrappers
+
     def wrappers_left_in_round(self) -> bool:
         return self.__wrappers.count < self.__wrappers_per_round
 
@@ -53,6 +83,11 @@ class Execution:
             return BaseImages[self.__user_preferred_base_image]
         else:
             return self.__fuzzer.fuzz_base_image()
+
+    def get_next_wrapper(self) -> Wrapper:
+        return self.__fuzzer.fuzz_wrapper(
+            self.__wrappers.get_last_wrapper(), self.__available_wrappers
+        )
 
     def add_image_to_used(self, img: str) -> None:
         self.__used_docker_images.add(img)

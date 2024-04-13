@@ -47,6 +47,12 @@ class Wrappers:
     def target_states(self) -> List[Tuple[Identifier, State]]:
         return self.__data
 
+    def get_last_wrapper(self) -> Wrapper:
+        if len(self.__data) >= 1:
+            return self.__data[-1]
+        else:
+            return None
+
     def set_error_state(self, target: State, actual: State) -> None:
         self.__has_error = True
         self.__error_target = target

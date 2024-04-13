@@ -1,5 +1,4 @@
 import logging
-import random
 import signal
 import sys
 import time
@@ -14,18 +13,14 @@ from triac.lib.docker.const import get_base_image_identifiers
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.errors import persist_error
 from triac.lib.generator.ansible import Ansible
-from triac.lib.random import Fuzzer
 from triac.types.errors import StateMismatchError
 from triac.types.execution import Execution
-from triac.types.target import Target
-from triac.types.wrappers import Wrappers
 from triac.ui.cli_layout import CLILayout
-from triac.ui.log_handler import UILoggingHandler
-from triac.values.user import UserType
-from triac.wrappers.file import File
 
 
-def exec_fuzzing_round(execution: Execution, stop_event: Event, image_cache: Dict[BaseImages, str]):
+def exec_fuzzing_round(
+    execution: Execution, stop_event: Event, image_cache: Dict[BaseImages, str]
+):
     # Start new round
     execution.start_new_round()
     logger = logging.getLogger(__name__)
@@ -41,7 +36,7 @@ def exec_fuzzing_round(execution: Execution, stop_event: Event, image_cache: Dic
         image_cache[execution.base_image] = image
 
     image = image_cache[execution.base_image]
-    
+
     if stop_event.is_set():
         return
 
@@ -56,9 +51,9 @@ def exec_fuzzing_round(execution: Execution, stop_event: Event, image_cache: Dic
         try:
             if stop_event.is_set():
                 return
+
             # Randomly choose next wrapper and execute
-            # TODO: Randomly choose wrapper
-            wrapper = File()
+            wrapper = execution.get_next_wrapper()
 
             # Instantiate target state
             target_state = execution.add_wrapper_to_round(wrapper, container)
@@ -123,7 +118,6 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
         logger.info("All rounds executed")
 
     # Cleanup
-    # TODO: Also delete base images (e.g. debian:12?
     logger.info("Cleaning up resources")
     logger.debug("The following images where used during execution:")
     logger.debug(execution.used_docker_images)
@@ -222,6 +216,9 @@ def fuzz(
 
     # initialize the UI
     ui = CLILayout(state)
+
+    # Load the wrappers
+    state.load_list_of_wrapper_classes()
 
     # Start the threads to display the UI and computation
     fuzz_worker = Thread(target=exec_fuzzing, args=(state, fuzz_stop))
