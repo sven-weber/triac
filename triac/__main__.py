@@ -5,6 +5,7 @@ import sys
 import time
 from asyncio import Event
 from threading import Thread
+from typing import Dict
 
 import click
 
@@ -24,7 +25,7 @@ from triac.values.user import UserType
 from triac.wrappers.file import File
 
 
-def exec_fuzzing_round(execution: Execution, stop_event: Event):
+def exec_fuzzing_round(execution: Execution, stop_event: Event, image_cache: Dict[BaseImages, str]):
     # Start new round
     execution.start_new_round()
     logger = logging.getLogger(__name__)
@@ -33,12 +34,14 @@ def exec_fuzzing_round(execution: Execution, stop_event: Event):
     )
     docker = DockerClient()
 
-    # Build the base image
-    # TODO: This fails sometimes due to time-outs to the docker registry
-    # We could easily cache if this image has been build and then use this
-    image = docker.build_base_image(execution.base_image)
-    execution.add_image_to_used(image)
+    # Build the base image or take from cache
+    if execution.base_image not in image_cache:
+        image = docker.build_base_image(execution.base_image)
+        execution.add_image_to_used(image)
+        image_cache[execution.base_image] = image
 
+    image = image_cache[execution.base_image]
+    
     if stop_event.is_set():
         return
 
@@ -89,10 +92,13 @@ def exec_fuzzing_round(execution: Execution, stop_event: Event):
 def exec_fuzzing(execution: Execution, stop_event: Event):
     logger = logging.getLogger(__name__)
 
+    # Cache for build base images
+    image_cache = {}
+
     # Execute all the rounds
     while execution.rounds_left() and stop_event.is_set() == False:
         try:
-            exec_fuzzing_round(execution, stop_event)
+            exec_fuzzing_round(execution, stop_event, image_cache)
         except StateMismatchError as e:
             logger.error("Found mismatch between target and actual state")
             logger.error("Target state:")
