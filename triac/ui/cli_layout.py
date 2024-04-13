@@ -35,13 +35,12 @@ class VerticalOverflowText(Text):
         no_wrap: Optional[bool] = None,
     ) -> Lines:
         # Call sub wrapped
+        # When we pass along the parameters this
+        # Crashes sometimes. And it seems to be working
+        # fine without passing them along so.
         wrapped = super().wrap(
             console,
-            width,
-            justify=justify,
-            overflow=overflow,
-            tab_size=tab_size,
-            no_wrap=no_wrap,
+            width
         )
 
         # If there are too many lines, show the tail

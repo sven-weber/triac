@@ -48,7 +48,7 @@ def exec_fuzzing_round(execution: Execution, stop_event: Event, image_cache: Dic
     while execution.wrappers_left_in_round():
         if stop_event.is_set():
             return
-        logger.info(f"---- Executing wrapper #{execution.num_wrappers_in_round}")
+        logger.info(f"---- Executing wrapper #{execution.num_wrappers_in_round + 1}")
 
         # TODO: Do this with multiple tools to enable differential testing
         container = docker.run_container_from_image(image)
@@ -245,6 +245,4 @@ def fuzz(
 if __name__ == "__main__":
     fuzz()
     # TODO: Enable replay
-    # TODO: Delete old logs to prevent memory drain and errors when Panel becomes too big
-    # Idea: Overwrite append to only keep 100 lines max
     sys.exit(0)
