@@ -101,8 +101,6 @@ class Execution:
                 last, available
             )
 
-            print(wrapper)
-
             # See if wrapper can be executed in the environment
             capable = container.execute_method(wrapper, "can_execute")
 

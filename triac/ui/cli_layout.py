@@ -16,6 +16,7 @@ from rich.table import Table
 from rich.text import Text
 
 from triac.types.execution import Execution
+from triac.ui.log_filter import build_log_filter
 from triac.ui.log_handler import UILoggingHandler
 
 
@@ -57,13 +58,20 @@ class CLILayout:
         self.__log_output = VerticalOverflowText()
 
         # Enable log capturing
+        log_filter = build_log_filter(False, [__name__.split(".")[0], "__main__"])
+
+        ui_handler = UILoggingHandler(self.__log_output)
+        ui_handler.addFilter(log_filter)
+        file_handler = logging.FileHandler('triac.log')
+        file_handler.addFilter(log_filter)
+
         logging.basicConfig(
             level=state.log_level,
             format="%(message)s",
             datefmt="[%X]",
-            handlers=[UILoggingHandler(self.__log_output, False)],
+            handlers=[ ui_handler, file_handler ]
         )
-
+    
     def format_timedelta(self):
         hours, remainder = divmod(self.__state.elapsed_time.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)

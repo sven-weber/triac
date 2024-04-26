@@ -113,7 +113,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
             if stop_event.is_set() == False:
                 if execution.continue_on_error == False:
                     logger.error("Press any key to continue with the next round...")
-                    time.sleep(2)  # UI update
+                    time.sleep(5)  # UI update
                     input()
                 else:
                     logger.error("Executing next round")
