@@ -26,3 +26,7 @@ class Wrapper(ABC):
     @abstractmethod
     def verify(state: State) -> State:
         pass
+
+    @staticmethod
+    def can_execute() -> bool:
+        return True
