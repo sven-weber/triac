@@ -1,5 +1,5 @@
 from grp import getgrgid
-from os import stat
+from os import lstat, readlink
 from copy import deepcopy
 from os.path import isdir, isfile, islink
 from pwd import getpwuid
@@ -15,8 +15,17 @@ from triac.values.path import PathValue
 from triac.values.path_state import PathState, PathStateType, PathStateValue
 from triac.values.user import User, UserType, UserValue
 
-ANSIBLE_TEMPLATE = """ansible.builtin.file:
+ANSIBLE_TEMPLATE_NORMAL = """ansible.builtin.file:
   path: {path}
+  state: {state}
+  owner: {owner}
+  group: {group}
+  mode: {mode}
+"""
+
+ANSIBLE_TEMPLATE_LINK = """ansible.builtin.file:
+  dest: {path}
+  src: {path}
   state: {state}
   owner: {owner}
   group: {group}
@@ -53,7 +62,10 @@ class File(Wrapper):
         s["state"] = ps.transform(target)
 
         if target == Target.ANSIBLE:
-            return ANSIBLE_TEMPLATE.format(**s)
+            if ps.value == PathState.SYMLINK:
+                return ANSIBLE_TEMPLATE_LINK.format(**s)
+            else:
+                return ANSIBLE_TEMPLATE_NORMAL.format(**s)
         elif target == Target.PYINFRA:
             s["present"] = BoolValue(ps != PathState.ABSENT).transform(Target.PYINFRA)
             return PYINFRA_TEMPLATE.format(**s)
@@ -67,19 +79,21 @@ class File(Wrapper):
         state = {}
         try:
             ps = PathState.FILE
+            opt = None
             if isdir(path):
                 ps = PathState.DIRECTORY
             elif islink(path):
                 ps = PathState.SYMLINK
-            state["path"] = PathStateValue(PathValue(path), ps)
+                opt = readlink(path)
+            st = lstat(path)
 
-            st = stat(path)
+            state["path"] = PathStateValue(PathValue(path), ps, opt)
             state["owner"] = UserValue(User(getpwuid(st.st_uid)))
             state["group"] = GroupValue(Group(getgrgid(st.st_gid)))
             state["mode"] = ModeValue(parse_mode(st.st_mode))
         except Exception as e:
             print(e)
             state = deepcopy(exp)
-            state["path"] = PathStateValue(PathValue(path), PathState.ABSENT)
+            state["path"] = PathStateValue(PathValue(path), PathState.ABSENT, None)
 
         return state

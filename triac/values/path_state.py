@@ -24,20 +24,27 @@ class PathState(Enum):
 
 
 class PathStateValue(BaseValue):
-    def __init__(self, val: PathValue, state: PathState) -> None:
+    def __init__(self, val: PathValue, state: PathState, opt: PathValue | None) -> None:
         super().__init__(val)
         self.__state = state
+        self.__opt = opt
 
     @property
     def state(self) -> PathState:
         return self.__state
 
+    @property
+    def opt(self) -> PathValue | None:
+        return self.__opt
+
     def __repr__(self):
-        return f"[{self.__state.value}] {self.val.__repr__()}"
+        if self.__state == PathState.SYMLINK:
+            return f"[{self.__state.value}] [dst] {self.val.__repr__()} [src] {self.opt.__repr__()}"
+        else:
+            return f"[{self.__state.value}] {self.val.__repr__()}"
 
     def transform(self, target: Target) -> str:
         return self.val.transform(target)
-
 
 class PathStateType(BaseType):
     def __init__(
@@ -67,4 +74,8 @@ class PathStateType(BaseType):
             [PathState.FILE, PathState.DIRECTORY, PathState.SYMLINK, PathState.ABSENT]
         )
         path = PathType(root=self.__root, filetype=self.__map(state))
-        return PathStateValue(path.generate(), state)
+        opt = None
+        if state == PathState.SYMLINK:
+            opt = PathType(root=self.__root, filetype=choice([FileType.FILE, FileType.DIRECTORY])).generate()
+
+        return PathStateValue(path.generate(), state, opt)
