@@ -101,6 +101,8 @@ class Execution:
                 last, available
             )
 
+            logger.debug(f"Checking if {wrapper} can execute")
+            
             # See if wrapper can be executed in the environment
             capable = container.execute_method(wrapper, "can_execute")
 

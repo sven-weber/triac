@@ -31,6 +31,7 @@ class Wrappers:
     ) -> None:
         self.__base_image = base_image
         self.__data = data
+        self.__last_wrapper = None
         self.__has_error = False
         self.__error_target = {}
         self.__error_actual = {}
@@ -48,10 +49,7 @@ class Wrappers:
         return self.__data
 
     def get_last_wrapper(self) -> Wrapper:
-        if len(self.__data) >= 1:
-            return self.__data[-1]
-        else:
-            return None
+        return self.__last_wrapper
 
     def set_error_state(self, target: State, actual: State) -> None:
         self.__has_error = True
@@ -62,6 +60,7 @@ class Wrappers:
         identifier = Identifier(wrapper)
         state = Fuzzer.fuzz_state(wrapper.definition(), container)
         self.__data.append((identifier, state))
+        self.__last_wrapper = wrapper
         return state
 
     @property
