@@ -1,11 +1,12 @@
-from os import getcwd
+from os import chmod, getcwd
+from stat import S_IWUSR, S_IRUSR
 from os.path import join
 
 
 class Key:
     def __init__(self) -> None:
-        # TODO: Ensure correct permissions?
         self.__key_path = join(getcwd(), "ssh-keys", "id_rsa")
+        chmod(self.__key_path, S_IWUSR | S_IRUSR)
 
     @property
     def key_path(self) -> str:
