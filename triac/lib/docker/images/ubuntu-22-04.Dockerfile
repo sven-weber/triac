@@ -31,4 +31,13 @@ RUN pip install -r requirements.txt
 # Enable systemd
 #
 RUN apt update && apt install -y systemd && apt clean
+ENV container docker
+
+RUN systemctl mask getty@tty1.service
+RUN systemctl mask getty@tty2.service
+RUN systemctl mask getty@tty3.service
+RUN systemctl mask getty@tty4.service
+RUN systemctl mask getty@tty5.service
+RUN systemctl mask getty@tty6.service
+
 ENTRYPOINT ["/lib/systemd/systemd"]
