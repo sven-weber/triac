@@ -2,14 +2,15 @@ import logging
 from os.path import join
 
 from ansible_runner import run_async as ansible_run
-from ansible_runner.interface import InventoryConfig
 
+from triac.lib.generator.errors import AnsibleError
 from triac.lib.docker.types.container import Container
 from triac.lib.generator.key import Key
 from triac.lib.generator.tmp import Tmp
 from triac.types.target import Target
 from triac.types.wrapper import State, Wrapper
 
+FAILURE_EVENTS = ["runner_on_failed", "runner_on_unreachable"]
 
 class Ansible(Tmp, Key):
     def __init__(self, wrapper: Wrapper, state: State, container: Container) -> None:
@@ -68,13 +69,16 @@ all:
         _, runner = ansible_run(
             inventory=self.__inventory_path, playbook=self.__playbook_path, quiet=True
         )
+
         # TODO: use these
         # Check for failed and unreachable
         # runner_on_failed
         for event in runner.events:
             if "event" in event:
-                self.__logger.debug(f'Ansible execution event: {event["event"]}')
-                self.__logger.debug(event)
+                self.__logger.debug(f"Got ansible event: {event}")
+                if event["event"] in FAILURE_EVENTS:
+                    raise AnsibleError(event["event"], event)
+
         state = self.__container.execute_method(
             self.__wrapper, "verify", [self.__state]
         )
