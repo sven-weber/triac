@@ -1,5 +1,6 @@
 from grp import getgrgid
 from os import stat
+from copy import deepcopy
 from os.path import isdir, isfile, islink
 from pwd import getpwuid
 from typing import cast
@@ -60,8 +61,8 @@ class File(Wrapper):
             raise UnsupportedTargetWrapperError(target, File.__name__)
 
     @staticmethod
-    def verify(state: State) -> State:
-        path_val = cast(PathStateValue, state["path"])
+    def verify(exp: State) -> State:
+        path_val = cast(PathStateValue, exp["path"])
         path = path_val.val.val
         state = {}
         try:
@@ -78,6 +79,7 @@ class File(Wrapper):
             state["mode"] = ModeValue(parse_mode(st.st_mode))
         except Exception as e:
             print(e)
+            state = deepcopy(exp)
             state["path"] = PathStateValue(PathValue(path), PathState.ABSENT)
 
         return state

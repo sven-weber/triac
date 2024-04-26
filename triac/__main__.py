@@ -3,6 +3,7 @@ import signal
 import sys
 import time
 from asyncio import Event
+from deepdiff import DeepDiff
 from threading import Thread
 from typing import Dict
 
@@ -74,7 +75,7 @@ def exec_fuzzing_round(
             logger.debug(is_state)
 
             # Check states for equality
-            if is_state != target_state:
+            if len(DeepDiff(is_state, target_state).affected_root_keys) > 0:
                 raise StateMismatchError(target_state, is_state)
 
             logger.info(f"Target state reached, wrapper finished")

@@ -21,7 +21,7 @@ class Group:
         return self.__gid
 
     def __repr__(self):
-        return f"[name]: {self.__name}, [id]: {self.__gid}"
+        return f"[name]: {self.__name}, [gid]: {self.__gid}"
 
 
 class GroupValue(BaseValue):

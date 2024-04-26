@@ -61,19 +61,19 @@ class Mode:
 
 def parse_mode(mode: int) -> Mode:
     u = 0
-    u += 1 if bool(mode & stat.S_IRUSR) else 0
+    u += 4 if bool(mode & stat.S_IRUSR) else 0
     u += 2 if bool(mode & stat.S_IWUSR) else 0
-    u += 4 if bool(mode & stat.S_IXUSR) else 0
+    u += 1 if bool(mode & stat.S_IXUSR) else 0
 
     g = 0
-    g += 1 if bool(mode & stat.S_IRGRP) else 0
+    g += 4 if bool(mode & stat.S_IRGRP) else 0
     g += 2 if bool(mode & stat.S_IWGRP) else 0
-    g += 4 if bool(mode & stat.S_IXGRP) else 0
+    g += 1 if bool(mode & stat.S_IXGRP) else 0
 
     o = 0
-    o += 1 if bool(mode & stat.S_IROTH) else 0
+    o += 4 if bool(mode & stat.S_IROTH) else 0
     o += 2 if bool(mode & stat.S_IWOTH) else 0
-    o += 4 if bool(mode & stat.S_IXOTH) else 0
+    o += 1 if bool(mode & stat.S_IXOTH) else 0
 
     return Mode(Permission(u), Permission(g), Permission(o))
 
