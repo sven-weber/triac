@@ -75,7 +75,10 @@ class PathStateType(BaseType):
         )
         path = PathType(root=self.__root, filetype=self.__map(state))
         opt = None
-        if state == PathState.SYMLINK:
-            opt = PathType(root=self.__root, filetype=choice([FileType.FILE, FileType.DIRECTORY])).generate()
 
-        return PathStateValue(path.generate(), state, opt)
+        if state == PathState.SYMLINK:
+            actual_state = choice([PathState.FILE, PathState.DIRECTORY])
+            path = PathType(root=self.__root, filetype=self.__map(actual_state))
+            opt = PathType(root=self.__root, filetype=self.__map(actual_state))
+
+        return PathStateValue(path.generate(), state, opt if opt is None else opt.generate())

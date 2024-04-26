@@ -26,6 +26,7 @@ ANSIBLE_TEMPLATE_NORMAL = """ansible.builtin.file:
 ANSIBLE_TEMPLATE_LINK = """ansible.builtin.file:
   dest: {path}
   src: {path}
+  force: true
   state: {state}
   owner: {owner}
   group: {group}
@@ -80,11 +81,11 @@ class File(Wrapper):
         try:
             ps = PathState.FILE
             opt = None
-            if isdir(path):
-                ps = PathState.DIRECTORY
-            elif islink(path):
+            if islink(path):
                 ps = PathState.SYMLINK
                 opt = readlink(path)
+            elif isdir(path):
+                ps = PathState.DIRECTORY
             st = lstat(path)
 
             state["path"] = PathStateValue(PathValue(path), ps, opt)
