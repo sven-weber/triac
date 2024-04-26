@@ -13,7 +13,7 @@ from triac.lib.docker.const import get_base_image_identifiers
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.errors import persist_error
 from triac.lib.generator.ansible import Ansible
-from triac.types.errors import StateMismatchError
+from triac.types.errors import StateMismatchError, WrappersExhaustedError
 from triac.types.execution import Execution
 from triac.ui.cli_layout import CLILayout
 
@@ -53,7 +53,11 @@ def exec_fuzzing_round(
                 return
 
             # Randomly choose next wrapper and execute
-            wrapper = execution.get_next_wrapper()
+            try:
+                wrapper = execution.get_next_wrapper(container)
+            except WrappersExhaustedError as e:
+                logger.error("There are no wrappers that can run in the reached state")
+                raise e
 
             # Instantiate target state
             target_state = execution.add_wrapper_to_round(wrapper, container)
@@ -106,7 +110,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
             logger.error("Encountered unexpected error during execution of round:")
             logger.exception(e)
             logger.error("\n")
-            if stop_event.set == False:
+            if stop_event.is_set() == False:
                 if execution.continue_on_error == False:
                     logger.error("Press any key to continue with the next round...")
                     time.sleep(2)  # UI update

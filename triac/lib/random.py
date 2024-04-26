@@ -42,14 +42,10 @@ class Fuzzer:
         """
         Randomly chooses the next wrapper to be executed.
         """
-        # Choose the same with 60% probability and a new one with 40%
-        if random.uniform(0, 1) <= 0.6 and current != None:
-            return current
-        else:
-            if (len(options) > 1):
-                options = [i for i in options if type(current) != i]
+        to_choose = options[:]
+        print(to_choose)
+        # Choose the same twice as likely as a new one
+        if current != None:
+            to_choose.append(current)
 
-            # Do a choice out of the list
-            choice = random.choice(options)
-            print(choice)
-            return choice()
+        return choice(to_choose)

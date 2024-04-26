@@ -33,7 +33,7 @@ class Container:
             TRIAC_SRC_DIR, relative_path_to_lib_docker, "runners", "run_in_container.py"
         )
 
-    def execute_method(self, obj: Any, method: str, arguments: List[Any]) -> Any:
+    def execute_method(self, obj: Any, method: str, arguments: List[Any] = []) -> Any:
         # Dump the object
         encoded_obj = encode(obj)
         encoded_args = " ".join([encode(arg) for arg in arguments])

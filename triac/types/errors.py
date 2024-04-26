@@ -15,6 +15,12 @@ class UnsupportedTargetWrapperError(Exception):
         super().__init__(f"Target '{target}' is not supported by wrapper {wrapper}")
 
 
+class WrappersExhaustedError(Exception):
+    def __init__(self):
+        super().__init__(
+            f"There are no more wrappers to be executed"
+        )
+
 class StateMismatchError(Exception):
     def __init__(self, target: State, actual: State):
         super().__init__(f"Found a state mismatch between target and actual state")

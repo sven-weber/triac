@@ -8,6 +8,7 @@ from typing import Any, List, Set, Tuple
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
 from triac.lib.random import Fuzzer
+from triac.types.errors import WrappersExhaustedError
 from triac.types.wrapper import State, Wrapper
 from triac.types.wrappers import Identifier, Wrappers
 
@@ -84,10 +85,35 @@ class Execution:
         else:
             return self.__fuzzer.fuzz_base_image()
 
-    def get_next_wrapper(self) -> Wrapper:
-        return self.__fuzzer.fuzz_wrapper(
-            self.__wrappers.get_last_wrapper(), self.__available_wrappers
-        )
+    def get_next_wrapper(self, container: Container) -> Wrapper:
+        last = self.__wrappers.get_last_wrapper()
+        available = self.__available_wrappers
+        
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Fuzzing next wrapper")
+
+        while True:
+            if len(available) == 0:
+                raise WrappersExhaustedError()
+
+            # Search for wrapper that is capable
+            wrapper = self.__fuzzer.fuzz_wrapper(
+                last, available
+            )
+
+            print(wrapper)
+
+            # See if wrapper can be executed in the environment
+            capable = container.execute_method(wrapper, "can_execute")
+
+            if capable == True:
+                logger.debug(f"Found {wrapper} which can run in the environment")
+                return wrapper
+            else:
+                logger.debug(f"{wrapper} cannot run. Trying next")
+                available.remove(wrapper)
+                if wrapper == last:
+                    last = None
 
     def add_image_to_used(self, img: str) -> None:
         self.__used_docker_images.add(img)
