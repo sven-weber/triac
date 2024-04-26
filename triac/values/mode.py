@@ -9,12 +9,12 @@ from triac.types.target import Target
 
 class Permission(Enum):
     NONE = 0
-    R = 1
+    R = 4
     W = 2
-    RW = 3
-    X = 4
+    RW = 6
+    X = 1
     XR = 5
-    XW = 6
+    XW = 3
     XWR = 7
 
     def __str__(self) -> str:
