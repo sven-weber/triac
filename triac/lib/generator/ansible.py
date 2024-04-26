@@ -70,9 +70,6 @@ all:
             inventory=self.__inventory_path, playbook=self.__playbook_path, quiet=True
         )
 
-        # TODO: use these
-        # Check for failed and unreachable
-        # runner_on_failed
         for event in runner.events:
             if "event" in event:
                 self.__logger.debug(f"Got ansible event: {event}")

@@ -43,7 +43,6 @@ class Fuzzer:
         Randomly chooses the next wrapper to be executed.
         """
         to_choose = options[:]
-        print(to_choose)
         # Choose the same twice as likely as a new one
         if current != None:
             to_choose.append(current)

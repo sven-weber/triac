@@ -9,6 +9,7 @@ from triac.types.wrapper import State, Wrapper
 
 class Identifier:
     def __init__(self, obj: Wrapper) -> None:
+        self.__obj = obj
         cls = obj.__class__
         self.__cls = cls.__qualname__
         self.__mod = cls.__module__
@@ -18,7 +19,7 @@ class Identifier:
         return self.__mod
 
     def __repr__(self):
-        return f"{self.__cls}"
+        return f"{self.__obj.__name__}"
 
     @property
     def cls(self) -> str:
