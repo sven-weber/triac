@@ -1,6 +1,6 @@
 from os import chmod, getcwd
-from stat import S_IWUSR, S_IRUSR
 from os.path import join
+from stat import S_IRUSR, S_IWUSR
 
 
 class Key:

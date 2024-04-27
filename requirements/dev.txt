@@ -7,3 +7,5 @@ art>=6.1
 rich>=13.7.1
 click>=8.1.7
 deepdiff>=6.7.1
+ansible-core>=2.16.6
+ansible>=9.5.1

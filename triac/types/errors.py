@@ -17,9 +17,8 @@ class UnsupportedTargetWrapperError(Exception):
 
 class WrappersExhaustedError(Exception):
     def __init__(self):
-        super().__init__(
-            f"There are no more wrappers to be executed"
-        )
+        super().__init__(f"There are no more wrappers to be executed")
+
 
 class StateMismatchError(Exception):
     def __init__(self, target: State, actual: State):

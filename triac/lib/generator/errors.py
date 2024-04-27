@@ -6,9 +6,7 @@ class AnsibleError(Exception):
         # TODO: make this message meaningful
         self.__error = error
         self.__event = event
-        super().__init__(
-            f"Ansible threw error: {self.__error}"
-        )
+        super().__init__(f"Ansible threw error: {self.__error}")
 
     def event(self) -> Any:
         return self.__event

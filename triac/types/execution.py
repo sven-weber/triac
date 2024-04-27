@@ -88,7 +88,7 @@ class Execution:
     def get_next_wrapper(self, container: Container) -> Wrapper:
         last = self.__wrappers.get_last_wrapper()
         available = self.__available_wrappers
-        
+
         logger = logging.getLogger(__name__)
         logger.debug(f"Fuzzing next wrapper")
 
@@ -97,12 +97,10 @@ class Execution:
                 raise WrappersExhaustedError()
 
             # Search for wrapper that is capable
-            wrapper = self.__fuzzer.fuzz_wrapper(
-                last, available
-            )
+            wrapper = self.__fuzzer.fuzz_wrapper(last, available)
 
             logger.debug(f"Checking if {wrapper} can execute")
-            
+
             # See if wrapper can be executed in the environment
             capable = container.execute_method(wrapper, "can_execute")
 

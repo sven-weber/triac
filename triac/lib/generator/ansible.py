@@ -3,14 +3,15 @@ from os.path import join
 
 from ansible_runner import run_async as ansible_run
 
-from triac.lib.generator.errors import AnsibleError
 from triac.lib.docker.types.container import Container
+from triac.lib.generator.errors import AnsibleError
 from triac.lib.generator.key import Key
 from triac.lib.generator.tmp import Tmp
 from triac.types.target import Target
 from triac.types.wrapper import State, Wrapper
 
 FAILURE_EVENTS = ["runner_on_failed", "runner_on_unreachable"]
+
 
 class Ansible(Tmp, Key):
     def __init__(self, wrapper: Wrapper, state: State, container: Container) -> None:

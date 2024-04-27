@@ -12,7 +12,7 @@ class UILoggingHandler(logging.Handler):
         self.__console = console_out
 
         # Create a formatter
-        self.formatter = logging.Formatter("%(message)s\n")       
+        self.formatter = logging.Formatter("%(message)s\n")
 
     def emit(self, record):
         formatted = self.format(record)

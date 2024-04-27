@@ -1,6 +1,7 @@
 from logging import LogRecord
 from typing import List
 
+
 def build_log_filter(capture_libs: bool, allowed_modules: List[str]):
 
     def log_filter(record: LogRecord) -> bool:

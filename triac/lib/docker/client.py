@@ -8,12 +8,8 @@ from typing import List
 
 import docker
 
-from triac.lib.docker.const import (
-    TRIAC_DIR_IN_REPO,
-    TRIAC_SRC_DIR,
-    TRIAC_WORKING_DIR,
-    get_image_identifier,
-)
+from triac.lib.docker.const import (TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR,
+                                    TRIAC_WORKING_DIR, get_image_identifier)
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
 

@@ -3,11 +3,11 @@ import signal
 import sys
 import time
 from asyncio import Event
-from deepdiff import DeepDiff
 from threading import Thread
 from typing import Dict
 
 import click
+from deepdiff import DeepDiff
 
 from triac.lib.docker.client import DockerClient
 from triac.lib.docker.const import get_base_image_identifiers

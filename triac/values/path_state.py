@@ -46,6 +46,7 @@ class PathStateValue(BaseValue):
     def transform(self, target: Target) -> str:
         return self.val.transform(target)
 
+
 class PathStateType(BaseType):
     def __init__(
         self,
@@ -81,4 +82,6 @@ class PathStateType(BaseType):
             path = PathType(root=self.__root, filetype=self.__map(actual_state))
             opt = PathType(root=self.__root, filetype=self.__map(actual_state))
 
-        return PathStateValue(path.generate(), state, opt if opt is None else opt.generate())
+        return PathStateValue(
+            path.generate(), state, opt if opt is None else opt.generate()
+        )

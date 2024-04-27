@@ -1,6 +1,6 @@
+from copy import deepcopy
 from grp import getgrgid
 from os import lstat, readlink
-from copy import deepcopy
 from os.path import isdir, isfile, islink
 from pwd import getpwuid
 from typing import cast

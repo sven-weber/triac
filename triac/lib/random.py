@@ -2,7 +2,6 @@ import random
 from random import choice
 from typing import Any, Dict, List
 
-
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
 from triac.types.wrapper import Definition, State, Wrapper

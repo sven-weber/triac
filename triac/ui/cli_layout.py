@@ -62,16 +62,16 @@ class CLILayout:
 
         ui_handler = UILoggingHandler(self.__log_output)
         ui_handler.addFilter(log_filter)
-        file_handler = logging.FileHandler('triac.log')
+        file_handler = logging.FileHandler("triac.log")
         file_handler.addFilter(log_filter)
 
         logging.basicConfig(
             level=state.log_level,
             format="%(message)s",
             datefmt="[%X]",
-            handlers=[ ui_handler, file_handler ]
+            handlers=[ui_handler, file_handler],
         )
-    
+
     def format_timedelta(self):
         hours, remainder = divmod(self.__state.elapsed_time.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
