@@ -247,4 +247,5 @@ def fuzz(
 if __name__ == "__main__":
     fuzz()
     # TODO: Enable replay
+    # TODO: Fix permissions issues (cannot delete folder owned by root)
     sys.exit(0)
