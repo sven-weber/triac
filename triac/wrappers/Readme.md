@@ -18,10 +18,8 @@ class File(Wrapper):
     @staticmethod
     def transform(target: Target, state: State) -> str:
         
-
     @staticmethod
     def verify(exp: State) -> State:
-        
 ```
 
 The ```definition``` method should return the wrappers state definition. A definition is a Dictionary that maps strings to a TRIaC ```BaseType```. This ```BaseType``` implements a ```generate``` function that produces valid instantiation of this type. This ```generate``` method will be executed within the target environment such that you can e.g. fetch a list of all valid files and return one of it. There are already existing types you can reuse or you can write your own types if required.
