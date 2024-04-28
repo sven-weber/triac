@@ -57,7 +57,7 @@ For example, you can control the number of rounds and how many wrappers should b
 
 No matter which options you choose, TRIaC will generate a log file and error files for each run. See the section [Monitoring runs and reproducing errors](#monitoring-runs-and-reproducing-errors) below for further details.
 
-### Running TRIaC regularly/for longer times
+### Running TRIaC repeatedly or unsupervised
 
 If you plan on running TRIaC more than once, we recommend using the ```--keep-base-images``` option as follows:
 
