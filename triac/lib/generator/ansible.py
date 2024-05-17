@@ -76,6 +76,8 @@ all:
                 self.__logger.debug(f"Got ansible event: {event}")
                 if event["event"] in FAILURE_EVENTS:
                     raise AnsibleError(event["event"], event)
+                elif event["event"] == "verbose" and "ERROR! We were unable to read" in event["stdout"]:
+                    raise AnsibleError("Invalid YAML file", event["event"])
 
         state = self.__container.execute_method(
             self.__wrapper, "verify", [self.__state]

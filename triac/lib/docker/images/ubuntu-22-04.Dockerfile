@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 #
 # Install SSH server
 #
-RUN apt update && apt install -y openssh-server nano vim && apt clean
+RUN apt update && apt install -y openssh-server nano pkg-config libsystemd-dev vim && apt clean
 
 # Allow key-based login for root account
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
@@ -26,6 +26,8 @@ RUN apt update && apt install -y python3 python3-pip && apt clean
 # Install packages
 COPY ./requirements/prod.txt requirements.txt
 RUN pip install -r requirements.txt
+COPY ./requirements/image.txt image.txt
+RUN pip install -r image.txt
 
 #
 # Enable systemd

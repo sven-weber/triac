@@ -8,7 +8,9 @@ Each base image should adhere to the following:
     2. The login should be done via the ssh key given in root of the 'lib/docker' folder
     3. The ssh server should run on port 22
 2. A preinstalled init system (e.g. systemd)
-3. Python installed in version 3.11 with all the packages given in the requirements.txt file at the root of this repository
+3. Python installed in version 3.11 with the following packages installed  
+    3.1 All packages from /requirements/prod.txt
+    3.2 All packages from /requirements/image.txt
 
 
 > **Important**

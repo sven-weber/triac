@@ -3,7 +3,7 @@ FROM debian:12
 #
 # Install SSH server
 #
-RUN apt update && apt install -y openssh-server nano vim && apt clean
+RUN apt update && apt install -y openssh-server nano vim pkg-config libsystemd-dev && apt clean
 
 # Allow key-based login for root account
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
@@ -26,6 +26,8 @@ RUN apt update && apt install -y python3 python3-pip && apt clean
 # Install packages
 COPY ./requirements/prod.txt requirements.txt
 RUN pip install --break-system-packages -r requirements.txt
+COPY ./requirements/image.txt image.txt
+RUN pip install --break-system-packages -r image.txt
 
 #
 # Enable systemd

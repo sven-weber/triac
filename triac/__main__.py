@@ -183,11 +183,19 @@ def exec_fuzzing_round(
         image = docker.commit_container_to_image(container)
         execution.add_image_to_used(image)
 
+        # Remove containers
+        remove_containers(docker, containers)
+
 def print_debug_header(logger: logging.Logger):
     logger.debug("\n\n\n\n")
     logger.debug(text2art("TRIaC"))
     logger.debug("\n\n\n\n")
     logger.debug("Starting new triac run")
+
+def remove_containers(docker: DockerClient, containers: List[Container]):
+    for container in containers:
+        docker.remove_container(container)
+    containers.clear()
 
 def perform_cleanup(
         execution: Execution,
@@ -246,8 +254,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
                 else:
                     logger.error("Executing next round")
         finally:
-            for container in containers:
-                docker.remove_container(container)
+            remove_containers(docker, containers)
 
     if stop_event.is_set() == False:
         logger.info("All rounds executed")
