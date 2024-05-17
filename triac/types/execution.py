@@ -51,7 +51,7 @@ class Execution:
         logger = logging.getLogger(__name__)
         logger.info(f"Loading available wrappers for fuzzing")
 
-        self.__available_wrappers = []
+        self.__available_wrappers : List[Wrapper] = []
         repository_root = getcwd() + "/"
         modules = glob.glob(join(repository_root, "triac", "wrappers", "*.py"))
         modules = list(map(lambda f: f.replace(repository_root, ""), modules))
@@ -99,6 +99,12 @@ class Execution:
     def get_next_wrapper(self, container: Container) -> Wrapper:
         last = self.__wrappers.get_last_wrapper()
         available = self.__available_wrappers
+
+        # Filter available wrappers according to mode
+        if self.mode() == ExecutionMode.UNIT:
+            available = [elem for elem in filter(lambda w: self.unit_target in w.supported_targets(), available)]
+        
+        #TODO: ADD differential filtering        
 
         logger = logging.getLogger(__name__)
         logger.debug(f"Fuzzing next wrapper")

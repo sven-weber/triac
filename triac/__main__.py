@@ -107,7 +107,6 @@ def exec_fuzzing_round(
         raise_when_stop_event_set(stop_event)
 
         # Randomly choose next wrapper and get target state
-        # TODO: Check wrapper capabilities
         wrapper = get_next_wrapper(execution, container, logger)
         target_state = execution.add_wrapper_to_round(wrapper, container)
         raise_when_stop_event_set(stop_event)

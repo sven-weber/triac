@@ -3,7 +3,7 @@ from grp import getgrgid
 from os import lstat, readlink
 from os.path import isdir, isfile, islink
 from pwd import getpwuid
-from typing import cast
+from typing import List, cast
 
 from triac.types.errors import UnsupportedTargetWrapperError
 from triac.types.target import Target
@@ -76,6 +76,10 @@ class File(Wrapper):
             return PYINFRA_TEMPLATE.format(**s)
         else:
             raise UnsupportedTargetWrapperError(target, File.__name__)
+
+    def supported_targets() -> List[Target]:
+        #TODO: Add pyinfra
+        return [Target.ANSIBLE]
 
     @staticmethod
     def verify(exp: State) -> State:

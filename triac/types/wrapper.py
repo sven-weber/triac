@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, List
 
 from triac.types.base import BaseType, BaseValue
 from triac.types.target import Target
@@ -20,6 +20,11 @@ class Wrapper(ABC):
     @staticmethod
     @abstractmethod
     def transform(target: Target, state: State) -> str:
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def supported_targets() -> List[Target]:
         pass
 
     @staticmethod
