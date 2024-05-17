@@ -46,6 +46,10 @@ class PathStateValue(BaseValue):
     def transform(self, target: Target) -> str:
         return self.val.transform(target)
 
+    def transform_opt(self, target: Target) -> str:
+        assert(self.opt is not None)
+        return self.opt.transform(target)
+
 
 class PathStateType(BaseType):
     def __init__(

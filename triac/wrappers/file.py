@@ -24,8 +24,8 @@ ANSIBLE_TEMPLATE_NORMAL = """ansible.builtin.file:
 """
 
 ANSIBLE_TEMPLATE_LINK = """ansible.builtin.file:
-  dest: {path}
-  src: {path}
+  dest: {dest}
+  src: {src}
   force: true
   state: {state}
   owner: {owner}
@@ -59,16 +59,20 @@ class File(Wrapper):
     @staticmethod
     def transform(target: Target, state: State) -> str:
         s = {key: value.transform(target) for key, value in state.items()}
-        ps = cast(PathStateValue, state["path"]).state
-        s["state"] = ps.transform(target)
+        psv = cast(PathStateValue, state["path"])
+        s["state"] = psv.state.transform(target)
+
+        if psv.state == PathState.SYMLINK:
+            s["dest"] = psv.transform(target)
+            s["src"] = psv.transform_opt(target)
 
         if target == Target.ANSIBLE:
-            if ps.value == PathState.SYMLINK:
+            if psv.state == PathState.SYMLINK:
                 return ANSIBLE_TEMPLATE_LINK.format(**s)
             else:
                 return ANSIBLE_TEMPLATE_NORMAL.format(**s)
         elif target == Target.PYINFRA:
-            s["present"] = BoolValue(ps != PathState.ABSENT).transform(Target.PYINFRA)
+            s["present"] = BoolValue(psv.state != PathState.ABSENT).transform(Target.PYINFRA)
             return PYINFRA_TEMPLATE.format(**s)
         else:
             raise UnsupportedTargetWrapperError(target, File.__name__)
