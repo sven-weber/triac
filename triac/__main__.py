@@ -16,7 +16,7 @@ from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.errors import persist_error
 from triac.lib.generator.ansible import Ansible
 from triac.types.errors import ExecutionShouldStopRequestedError, StateMismatchError, TargetNotSupportedError, WrappersExhaustedError
-from triac.types.execution import Execution
+from triac.types.execution import Execution, ExecutionMode
 from triac.types.target import Target
 from triac.types.wrapper import State, Wrapper
 from triac.ui.cli_layout import CLILayout
@@ -69,6 +69,10 @@ def execute_against_target(
         case Target.ANSIBLE:
             logger.info(f"Executing Ansible against target")
             is_state = Ansible(wrapper, target_state, container).run()
+        case Target.PYINFRA:
+            #TODO: Change to actual pyinfra
+            logger.info(f"Executing pyinfra against target")
+            is_state = Ansible(wrapper, target_state, container).run()
         case _:
             raise TargetNotSupportedError(target)
         
@@ -80,6 +84,55 @@ def execute_against_target(
 def raise_error_when_states_not_equal(is_state: State, target_state: State, logger: logging.Logger):
     if len(DeepDiff(is_state, target_state).affected_root_keys) > 0:
         raise StateMismatchError(target_state, is_state)
+
+def exec_unit_test_with_wrapper(
+    target: Target,
+    target_state: State,
+    container: Container,
+    wrapper: Wrapper,
+    logger: logging.Logger,
+    stop_event: Event
+) -> State:
+    # Execute against the target
+    is_state = execute_against_target(target, target_state, container, wrapper, logger)
+    raise_when_stop_event_set(stop_event)
+
+    # Check states for equality
+    raise_error_when_states_not_equal(is_state, target_state, logger)
+    raise_when_stop_event_set(stop_event)
+
+    return is_state
+
+def exec_differential_test_with_wrapper(
+    execution: Execution,
+    target_state: State,
+    container: Container,
+    wrapper: Wrapper,
+    logger: logging.Logger,
+    stop_event: Event,
+    docker: DockerClient,
+    image: BaseImages,
+    containers: List[Container]
+):
+    # Execute first tool against target
+    first_state = exec_unit_test_with_wrapper(
+        execution.first_differential_target, target_state, container,
+        wrapper, logger, stop_event
+    )
+    
+    # Create second container for second tool
+    raise_when_stop_event_set(stop_event)
+    second_container = create_container_for_image(docker, image, containers)
+    raise_when_stop_event_set(stop_event)
+    second_state = exec_unit_test_with_wrapper(
+        execution.second_differential_target, target_state, second_container,
+        wrapper, logger, stop_event
+    )
+
+    # Check the states for equality
+    raise_when_stop_event_set(stop_event)
+    raise_error_when_states_not_equal(first_state, second_state, logger)
+
 
 def exec_fuzzing_round(
     docker: DockerClient, execution: Execution,
@@ -102,7 +155,6 @@ def exec_fuzzing_round(
         raise_when_stop_event_set(stop_event)
         logger.info(f"---- Executing wrapper #{execution.num_wrappers_in_round + 1}")
 
-        # TODO: Do this with multiple tools to enable differential testing
         container = create_container_for_image(docker, image, containers)
         raise_when_stop_event_set(stop_event)
 
@@ -111,16 +163,23 @@ def exec_fuzzing_round(
         target_state = execution.add_wrapper_to_round(wrapper, container)
         raise_when_stop_event_set(stop_event)
 
-        # Execute IaC tool
-        is_state = execute_against_target(execution.unit_target, target_state, container, wrapper, logger)
-        raise_when_stop_event_set(stop_event)
+        if execution.mode == ExecutionMode.UNIT:
+            # Unit test
+            exec_unit_test_with_wrapper(
+                execution.unit_target, target_state, container,
+                wrapper, logger, stop_event
+            )
+            logger.info(f"Target state reached, wrapper finished")
+        else:
+            # Differential test
+            exec_differential_test_with_wrapper(
+                execution, target_state, container,
+                wrapper, logger, stop_event,
+                docker, image, containers
+            )
+            logger.info("Target state reached by all targets, wrapper finished")
 
-        # Check states for equality
-        raise_error_when_states_not_equal(is_state, target_state, logger)
-        logger.info(f"Target state reached, wrapper finished")
-        raise_when_stop_event_set(stop_event)
-
-        # Commit container for next round then remove
+        # Commit container for next round
         image = docker.commit_container_to_image(container)
         execution.add_image_to_used(image)
 

@@ -14,4 +14,4 @@ def get_base_image_identifiers() -> List[str]:
 
 
 def get_image_identifier(img: BaseImages):
-    return f"triac:{img}"
+    return f"triac:{img.name}"
