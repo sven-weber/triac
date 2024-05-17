@@ -39,13 +39,24 @@ class Execution:
         self.__log_level = log_level
         self.__ui_log_level = ui_log_level
         self.__continue_on_error = continue_on_error
-        self.__unit = Target[unit]
-        self.__differential = differential
+        self.__unit = Target[unit] if unit != None else None
+        diff_target = self.__parse_differential(differential)
+        self.__first_differential = diff_target[0]
+        self.__second_differential = diff_target[1]
         self.__start_time = datetime.now()
         self.__used_docker_images = set()
         self.__round = 0
         self.__errors = 0
         self.__wrappers = Wrappers(None, [])
+
+    def __parse_differential(self, differential) -> tuple[Target, Target]:
+        if (differential == None):
+            return (None, None)
+        
+        # Parse
+        split = differential.split(":")
+        return (Target[split[0]], Target[split[1]])
+
 
     def load_list_of_wrapper_classes(self) -> List[type[Wrapper]]:
         logger = logging.getLogger(__name__)
@@ -103,8 +114,15 @@ class Execution:
         # Filter available wrappers according to mode
         if self.mode() == ExecutionMode.UNIT:
             available = [elem for elem in filter(lambda w: self.unit_target in w.supported_targets(), available)]
-        
-        #TODO: ADD differential filtering        
+        else:
+            first = self.first_differential_target
+            second = self.second_differential_target
+            available = [
+                elem for elem in filter(
+                    lambda w: first in w.supported_targets() and second in w.supported_targets(),
+                    available
+                )
+            ]
 
         logger = logging.getLogger(__name__)
         logger.debug(f"Fuzzing next wrapper")
@@ -148,6 +166,14 @@ class Execution:
     @property
     def unit_target(self) -> Target:
         return self.__unit
+    
+    @property
+    def first_differential_target(self) -> Target:
+        return self.__first_differential
+    
+    @property
+    def second_differential_target(self) -> Target:
+        return self.__second_differential
 
     @property
     def continue_on_error(self) -> bool:

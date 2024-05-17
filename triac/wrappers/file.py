@@ -78,8 +78,7 @@ class File(Wrapper):
             raise UnsupportedTargetWrapperError(target, File.__name__)
 
     def supported_targets() -> List[Target]:
-        #TODO: Add pyinfra
-        return [Target.ANSIBLE]
+        return [Target.ANSIBLE, Target.PYINFRA]
 
     @staticmethod
     def verify(exp: State) -> State:
