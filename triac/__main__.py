@@ -5,6 +5,7 @@ import time
 from asyncio import Event
 from threading import Thread
 from typing import Dict
+from art import text2art
 
 import click
 from deepdiff import DeepDiff
@@ -88,9 +89,17 @@ def exec_fuzzing_round(
         finally:
             docker.remove_container(container)
 
+def print_debug_header(logger: logging.Logger):
+    logger.debug("\n\n\n\n")
+    logger.debug(text2art("TRIaC"))
+    logger.debug("\n\n\n\n")
+    logger.debug("Starting new triac run")
 
 def exec_fuzzing(execution: Execution, stop_event: Event):
     logger = logging.getLogger(__name__)
+
+    # Log the beginning of a new session
+    print_debug_header(logger)
 
     # Cache for build base images
     image_cache = {}
@@ -109,12 +118,11 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
             persist_error(execution, e)
         except Exception as e:
             logger.error("Encountered unexpected error during execution of round:")
-            logger.exception(e)
+            logger.error(e)
             logger.error("\n")
             if stop_event.is_set() == False:
                 if execution.continue_on_error == False:
                     logger.error("Press any key to continue with the next round...")
-                    time.sleep(5)  # UI update
                     input()
                 else:
                     logger.error("Executing next round")

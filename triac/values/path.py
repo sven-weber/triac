@@ -20,7 +20,7 @@ class FileType(Enum):
 
 DESCENT_FACTOR = 1.5
 BACKTRACK_FACTOR = 2
-IGNORE_PATHS = f"/(proc|mnt|run|dev|lib\\w*|sys|boot|srv|bin|usr/bin|usr|{TRIAC_WORKING_DIR}|\\w*sbin)"
+IGNORE_PATHS = f"/(proc|mnt|run|dev|lib\\w*|sys|boot|srv|bin|usr/bin|usr|/root/.cache|{TRIAC_WORKING_DIR}|\\w*sbin)"
 
 
 class PathValue(BaseValue):
