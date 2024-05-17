@@ -39,7 +39,7 @@ class Execution:
         self.__log_level = log_level
         self.__ui_log_level = ui_log_level
         self.__continue_on_error = continue_on_error
-        self.__unit = unit
+        self.__unit = Target[unit]
         self.__differential = differential
         self.__start_time = datetime.now()
         self.__used_docker_images = set()
