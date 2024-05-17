@@ -57,18 +57,38 @@ class CLILayout:
         self.__logo = Panel(Align.center(text2art("TRIaC"), vertical="middle"))
         self.__log_output = VerticalOverflowText()
 
+        #Setup logging
+        self.__configure_logging(state)
+        
+
+    def __configure_logging(self, state: Execution):
         # Enable log capturing
         log_filter = build_log_filter(False, [__name__.split(".")[0], "__main__"])
 
+        # UI Logger
         ui_handler = UILoggingHandler(self.__log_output)
+        ui_handler.setFormatter(
+            logging.Formatter(
+                fmt='%(message)s\n'
+            )
+        )
+        ui_handler.setLevel(state.ui_log_level)
         ui_handler.addFilter(log_filter)
+
+        # File Handler
         file_handler = logging.FileHandler("triac.log")
+        file_handler.setLevel(state.log_level)
+        file_handler.setFormatter(
+            logging.Formatter(
+                fmt='%(asctime)s - %(name)s :: %(levelname)-8s :: %(message)s',
+                datefmt='[%Y-%m-%d %H:%M:%S]'
+            )
+        )
         file_handler.addFilter(log_filter)
 
+        # Configure the two loggers
         logging.basicConfig(
             level=state.log_level,
-            format="%(message)s",
-            datefmt="[%X]",
             handlers=[ui_handler, file_handler],
         )
 

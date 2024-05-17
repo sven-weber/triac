@@ -21,6 +21,7 @@ class Execution:
         total_rounds: int,
         wrappers_per_round: int,
         log_level: str,
+        ui_log_level: str,
         continue_on_error: bool,
     ) -> None:
         self.__fuzzer = Fuzzer()
@@ -29,6 +30,7 @@ class Execution:
         self.__total_rounds = total_rounds
         self.__wrappers_per_round = wrappers_per_round
         self.__log_level = log_level
+        self.__ui_log_level = ui_log_level
         self.__continue_on_error = continue_on_error
         self.__start_time = datetime.now()
         self.__used_docker_images = set()
@@ -162,6 +164,10 @@ class Execution:
     @property
     def log_level(self) -> str:
         return self.__log_level
+
+    @property
+    def ui_log_level(self) -> str:
+        return self.__ui_log_level
 
     @property
     def elapsed_time(self) -> any:

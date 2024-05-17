@@ -11,8 +11,11 @@ class UILoggingHandler(logging.Handler):
         logging.Handler.__init__(self)
         self.__console = console_out
 
-        # Create a formatter
-        self.formatter = logging.Formatter("%(message)s\n")
+    def setFormatter(self, fmt: logging.Formatter | None) -> None:
+        return super().setFormatter(fmt)
+    
+    def setLevel(self, level: int | str) -> None:
+        return super().setLevel(level)
 
     def emit(self, record):
         formatted = self.format(record)

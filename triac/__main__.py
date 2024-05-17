@@ -162,6 +162,14 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
 )
 @click.option(
     "--log-level",
+    help="The log level to use for the generated log file",
+    default="DEBUG",
+    show_default=True,
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
+)
+@click.option(
+    "--ui-log-level",
+    help="The log level to display in the TRIaC Ui",
     default="INFO",
     show_default=True,
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
@@ -189,6 +197,7 @@ def fuzz(
     rounds,
     wrappers_per_round,
     log_level,
+    ui_log_level,
     base_image,
     keep_base_images,
     continue_on_error,
@@ -202,6 +211,7 @@ def fuzz(
         rounds,
         wrappers_per_round,
         log_level,
+        ui_log_level,
         continue_on_error,
     )
 
