@@ -4,7 +4,7 @@ import sys
 import time
 from asyncio import Event
 from threading import Thread
-from typing import Dict, List
+from typing import Container, Dict, List
 from art import text2art
 
 import click
@@ -15,14 +15,76 @@ from triac.lib.docker.const import get_base_image_identifiers
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.errors import persist_error
 from triac.lib.generator.ansible import Ansible
-from triac.types.errors import StateMismatchError, WrappersExhaustedError
+from triac.types.errors import ExecutionShouldStopRequestedError, StateMismatchError, TargetNotSupportedError, WrappersExhaustedError
 from triac.types.execution import Execution
 from triac.types.target import Target
+from triac.types.wrapper import State, Wrapper
 from triac.ui.cli_layout import CLILayout
 
 
+def build_base_image(
+        docker: DockerClient,
+        execution: Execution, 
+        image_cache: Dict[BaseImages, str]
+) -> BaseImages:
+    # Build the base image or take from cache
+    if execution.base_image not in image_cache:
+        image = docker.build_base_image(execution.base_image)
+        execution.add_image_to_used(image)
+        image_cache[execution.base_image] = image
+
+    return image_cache[execution.base_image]
+
+def create_container_for_image(
+        docker: DockerClient, image: BaseImages,
+        containers: List[Container]
+):
+    container = docker.run_container_from_image(image)
+    containers.append(container)
+    return container
+
+def get_next_wrapper(
+        execution: Execution,
+        container: Container,
+        logger: logging.Logger
+):
+    try:
+        return execution.get_next_wrapper(container)
+    except WrappersExhaustedError as e:
+        logger.error("There are no wrappers that can run in the reached state")
+        raise e
+
+def raise_when_stop_event_set(stop_event: Event):
+    if stop_event.is_set():
+        raise ExecutionShouldStopRequestedError()
+
+def execute_against_target(
+    target: Target,
+    target_state: State,
+    container: Container,
+    wrapper: Wrapper,
+    logger: logging.Logger
+) -> State:
+    match target:
+        case Target.ANSIBLE:
+            logger.info(f"Executing Ansible against target")
+            is_state = Ansible(wrapper, target_state, container).run()
+        case _:
+            raise TargetNotSupportedError(target)
+        
+    logger.debug(f"Got the following actual state:")
+    logger.debug(is_state)
+
+    return is_state
+
+def raise_error_when_states_not_equal(is_state: State, target_state: State, logger: logging.Logger):
+    if len(DeepDiff(is_state, target_state).affected_root_keys) > 0:
+        raise StateMismatchError(target_state, is_state)
+
 def exec_fuzzing_round(
-    execution: Execution, stop_event: Event, image_cache: Dict[BaseImages, str]
+    docker: DockerClient, execution: Execution,
+    stop_event: Event, image_cache: Dict[BaseImages, str],
+    containers: List[Container]
 ):
     # Start new round
     execution.start_new_round()
@@ -30,74 +92,37 @@ def exec_fuzzing_round(
     logger.info(
         f"***** Starting fuzzing round {execution.round} on image {execution.base_image.name} *****"
     )
-    docker = DockerClient()
 
-    # Build the base image or take from cache
-    if execution.base_image not in image_cache:
-        image = docker.build_base_image(execution.base_image)
-        execution.add_image_to_used(image)
-        image_cache[execution.base_image] = image
+    # Build base image
+    image = build_base_image(docker, execution, image_cache)
+    raise_when_stop_event_set(stop_event)
 
-    image = image_cache[execution.base_image]
-
-    if stop_event.is_set():
-        return
-
+    # Main execution loop
     while execution.wrappers_left_in_round():
-        if stop_event.is_set():
-            return
+        raise_when_stop_event_set(stop_event)
         logger.info(f"---- Executing wrapper #{execution.num_wrappers_in_round + 1}")
 
         # TODO: Do this with multiple tools to enable differential testing
-        container = docker.run_container_from_image(image)
+        container = create_container_for_image(docker, image, containers)
+        raise_when_stop_event_set(stop_event)
 
-        try:
-            if stop_event.is_set():
-                return
+        # Randomly choose next wrapper and get target state
+        wrapper = get_next_wrapper(execution, container, logger)
+        target_state = execution.add_wrapper_to_round(wrapper, container)
+        raise_when_stop_event_set(stop_event)
 
-            # Randomly choose next wrapper and execute
-            try:
-                wrapper = execution.get_next_wrapper(container)
-            except WrappersExhaustedError as e:
-                logger.error("There are no wrappers that can run in the reached state")
-                raise e
+        # Execute IaC tool
+        is_state = execute_against_target(Target.ANSIBLE, target_state, container, wrapper, logger)
+        raise_when_stop_event_set(stop_event)
 
-            # Instantiate target state
-            target_state = execution.add_wrapper_to_round(wrapper, container)
-            if stop_event.is_set():
-                return
+        # Check states for equality
+        raise_error_when_states_not_equal(is_state, target_state, logger)
+        logger.info(f"Target state reached, wrapper finished")
+        raise_when_stop_event_set(stop_event)
 
-            # Execute IaC tool
-            logger.info(f"Executing Ansible against target")
-            is_state = Ansible(wrapper, target_state, container).run()
-            if stop_event.is_set():
-                return
-
-            logger.debug(f"Got the following actual state:")
-            logger.debug(is_state)
-
-            # Check states for equality
-            if len(DeepDiff(is_state, target_state).affected_root_keys) > 0:
-                raise StateMismatchError(target_state, is_state)
-
-            logger.info(f"Target state reached, wrapper finished")
-            if stop_event.is_set():
-                return
-
-            # Commit container for next round then remove
-            image = docker.commit_container_to_image(container)
-            execution.add_image_to_used(image)
-        except StateMismatchError as e:
-            logger.error("Found mismatch between target and actual state")
-            logger.error("Target state:")
-            logger.error(e.target)
-            logger.error("Actual state:")
-            logger.error(e.actual)
-            execution.set_error_for_round(e.target, e.actual)
-            persist_error(execution, e)
-            break
-        finally:
-            docker.remove_container(container)
+        # Commit container for next round then remove
+        image = docker.commit_container_to_image(container)
+        execution.add_image_to_used(image)
 
 def print_debug_header(logger: logging.Logger):
     logger.debug("\n\n\n\n")
@@ -105,42 +130,11 @@ def print_debug_header(logger: logging.Logger):
     logger.debug("\n\n\n\n")
     logger.debug("Starting new triac run")
 
-def exec_fuzzing(execution: Execution, stop_event: Event):
-    logger = logging.getLogger(__name__)
-
-    # Log the beginning of a new session
-    print_debug_header(logger)
-
-    # Cache for build base images
-    image_cache = {}
-
-    # Execute all the rounds
-    while execution.rounds_left() and stop_event.is_set() == False:
-        try:
-            exec_fuzzing_round(execution, stop_event, image_cache)
-        except StateMismatchError as e:
-            logger.error("Found mismatch between target and actual state")
-            logger.error("Target state:")
-            logger.error(e.target)
-            logger.error("Actual state:")
-            logger.error(e.actual)
-            execution.set_error_for_round(e.target, e.actual)
-            persist_error(execution, e)
-        except Exception as e:
-            logger.error("Encountered unexpected error during execution of round:")
-            logger.error(e)
-            logger.error("\n")
-            if stop_event.is_set() == False:
-                if execution.continue_on_error == False:
-                    logger.error("Press any key to continue with the next round...")
-                    input()
-                else:
-                    logger.error("Executing next round")
-
-    if stop_event.is_set() == False:
-        logger.info("All rounds executed")
-
-    # Cleanup
+def perform_cleanup(
+        execution: Execution,
+        logger: logging.Logger,
+        docker: DockerClient
+):
     logger.info("Cleaning up resources")
     logger.debug("The following images where used during execution:")
     logger.debug(execution.used_docker_images)
@@ -151,8 +145,56 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
     )
     for image in to_remove:
         logger.debug(f"Removing image {image}")
-        docker = DockerClient()
         docker.remove_image(image)
+
+def exec_fuzzing(execution: Execution, stop_event: Event):
+    logger = logging.getLogger(__name__)
+    image_cache = {}
+    print_debug_header(logger)
+
+    # Initialize docker client
+    try:
+        docker = DockerClient()
+    except Exception as e:
+        logger.error("Could not initialize docker client:")
+        logger.exception(e)
+        return
+
+    # Execute all the rounds
+    while execution.rounds_left() and stop_event.is_set() == False:
+        containers = [] # Container to cleanup
+        try:
+            exec_fuzzing_round(docker, execution, stop_event, image_cache, containers)
+        except StateMismatchError as e:
+            logger.error("Found mismatch between target and actual state")
+            logger.error("Target state:")
+            logger.error(e.target)
+            logger.error("Actual state:")
+            logger.error(e.actual)
+            execution.set_error_for_round(e.target, e.actual)
+            persist_error(execution, e)
+        except ExecutionShouldStopRequestedError as e:
+            # Do nothing, the method failed because the execution should stop
+            pass
+        except Exception as e:
+            logger.error("Encountered unexpected error during execution of round:")
+            logger.exception(e)
+            logger.error("\n")
+            if stop_event.is_set() == False:
+                if execution.continue_on_error == False:
+                    logger.error("Press any key to continue with the next round...")
+                    input()
+                else:
+                    logger.error("Executing next round")
+        finally:
+            for container in containers:
+                docker.remove_container(container)
+
+    if stop_event.is_set() == False:
+        logger.info("All rounds executed")
+
+    # Cleanup
+    perform_cleanup(execution, logger, docker)
 
     # Done!
     if stop_event.is_set():
