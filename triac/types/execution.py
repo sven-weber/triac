@@ -40,6 +40,7 @@ class Execution:
         self.__ui_log_level = ui_log_level
         self.__continue_on_error = continue_on_error
         self.__unit = Target[unit] if unit != None else None
+        self.__formatted_diff_target = differential
         diff_target = self.__parse_differential(differential)
         self.__first_differential = diff_target[0]
         self.__second_differential = diff_target[1]
@@ -171,6 +172,10 @@ class Execution:
     def first_differential_target(self) -> Target:
         return self.__first_differential
     
+    @property
+    def formatted_diff_target(self) -> str:
+        return self.__formatted_diff_target
+
     @property
     def second_differential_target(self) -> Target:
         return self.__second_differential

@@ -15,7 +15,7 @@ from rich.pretty import Pretty
 from rich.table import Table
 from rich.text import Text
 
-from triac.types.execution import Execution
+from triac.types.execution import Execution, ExecutionMode
 from triac.ui.log_filter import build_log_filter
 from triac.ui.log_handler import UILoggingHandler
 
@@ -115,6 +115,9 @@ class CLILayout:
         stats_table_1.add_row(
             "Round", f"{self.__state.round}/{self.__state.total_rounds}"
         )
+        stats_table_1.add_row(
+            "Mode", f"{self.__state.mode().name}"
+        )
 
         stats_table_2 = Table(show_header=False, show_lines=False, box=None)
         stats_table_2.add_column("name")
@@ -123,13 +126,20 @@ class CLILayout:
             Text("Errors", style="bold red"),
             Text(str(self.__state.errors), style="bold red"),
         )
-        stats_table_2.add_row("Log Level", str(self.__state.log_level))
+        stats_table_2.add_row("Log Level", str(self.__state.ui_log_level))
         stats_table_2.add_row(
             "Base Image",
             (
                 ""
                 if self.__state.base_image is None
                 else str(self.__state.base_image.name)
+            ),
+        )
+        stats_table_2.add_row(
+            "Target",
+            (
+                self.__state.unit_target.name if self.__state.mode() == ExecutionMode.UNIT
+                else self.__state.formatted_diff_target
             ),
         )
         # Second table
@@ -193,7 +203,7 @@ class CLILayout:
         )
 
         layout["logo"].size = 8
-        layout["stats"].size = 5
+        layout["stats"].size = 6
         layout["status"].size = 3
 
         # Right
