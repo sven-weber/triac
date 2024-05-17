@@ -88,19 +88,14 @@ def exec_fuzzing_round(
             image = docker.commit_container_to_image(container)
             execution.add_image_to_used(image)
         except StateMismatchError as e:
-            raise e
-        except Exception as e:
-            #TODO Cleanup
-            logger.error("Encountered unexpected error during execution of round:")
-            logger.error(e)
-            logger.error("\n")
-            if stop_event.is_set() == False:
-                if execution.continue_on_error == False:
-                    logger.error("Press any key to continue with the next round...")
-                    input()
-                else:
-                    logger.error("Executing next round")
-            break #Break round loop
+            logger.error("Found mismatch between target and actual state")
+            logger.error("Target state:")
+            logger.error(e.target)
+            logger.error("Actual state:")
+            logger.error(e.actual)
+            execution.set_error_for_round(e.target, e.actual)
+            persist_error(execution, e)
+            break
         finally:
             docker.remove_container(container)
 
