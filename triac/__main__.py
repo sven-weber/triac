@@ -107,12 +107,13 @@ def exec_fuzzing_round(
         raise_when_stop_event_set(stop_event)
 
         # Randomly choose next wrapper and get target state
+        # TODO: Check wrapper capabilities
         wrapper = get_next_wrapper(execution, container, logger)
         target_state = execution.add_wrapper_to_round(wrapper, container)
         raise_when_stop_event_set(stop_event)
 
         # Execute IaC tool
-        is_state = execute_against_target(Target.ANSIBLE, target_state, container, wrapper, logger)
+        is_state = execute_against_target(execution.unit_target, target_state, container, wrapper, logger)
         raise_when_stop_event_set(stop_event)
 
         # Check states for equality
@@ -213,6 +214,13 @@ def get_differential_options() -> List[str]:
             results.append(f"{targets[first]}:{targets[second]}")
     return results
 
+def validate_options(unit: Target, differential: str):
+    if unit != None and differential != None:
+        print("Error: You cannot enable differential and unit testing at the same time", file=sys.stderr)
+        sys.exit(1)
+    elif unit == None and differential == None:
+        print("Error: You have to enable either unit or differential testing", file=sys.stderr)
+        sys.exit(1)
 
 @click.command()
 @click.option(
@@ -266,6 +274,12 @@ def get_differential_options() -> List[str]:
     show_default=True,
 )
 @click.option(
+    "--unit",
+    "-U",
+    help="Enables unit testing a specific tool. By default, Ansible wll be tested. This option cannot be supplied while performing differential testing.",
+    type=click.Choice([val.name for val in Target])
+)
+@click.option(
     "--differential",
     '-D',
     help="Enables differential testing between two tools. The tools have to be specified using one of the provided format options.",
@@ -279,9 +293,11 @@ def fuzz(
     base_image,
     keep_base_images,
     continue_on_error,
+    unit,
     differential
 ):
     """Start a TRIaC fuzzing session"""
+    validate_options(unit, differential)
 
     # Generate execution
     state = Execution(
@@ -292,6 +308,8 @@ def fuzz(
         log_level,
         ui_log_level,
         continue_on_error,
+        unit,
+        differential
     )
 
     # TODO: Enable replay
@@ -336,5 +354,4 @@ def fuzz(
 if __name__ == "__main__":
     fuzz()
     # TODO: Enable replay
-    # TODO: Fix permissions issues (cannot delete folder owned by root)
     sys.exit(0)

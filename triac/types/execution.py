@@ -1,3 +1,4 @@
+from enum import Enum
 import glob
 import logging
 from datetime import datetime
@@ -9,9 +10,13 @@ from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.docker.types.container import Container
 from triac.lib.random import Fuzzer
 from triac.types.errors import WrappersExhaustedError
+from triac.types.target import Target
 from triac.types.wrapper import State, Wrapper
 from triac.types.wrappers import Identifier, Wrappers
 
+class ExecutionMode(Enum):
+    UNIT = "unit"
+    DIFFERENTIAL = "differential"
 
 class Execution:
     def __init__(
@@ -23,6 +28,8 @@ class Execution:
         log_level: str,
         ui_log_level: str,
         continue_on_error: bool,
+        unit: Target,
+        differential: str
     ) -> None:
         self.__fuzzer = Fuzzer()
         self.__user_preferred_base_image = user_preferred_base_image
@@ -32,6 +39,8 @@ class Execution:
         self.__log_level = log_level
         self.__ui_log_level = ui_log_level
         self.__continue_on_error = continue_on_error
+        self.__unit = unit
+        self.__differential = differential
         self.__start_time = datetime.now()
         self.__used_docker_images = set()
         self.__round = 0
@@ -124,6 +133,15 @@ class Execution:
 
     def encode_wrappers_for_round(self) -> str:
         return self.__wrappers.encode()
+
+    def mode(self) -> ExecutionMode:
+        if self.__unit != None:
+            return ExecutionMode.UNIT
+        return ExecutionMode.DIFFERENTIAL
+
+    @property
+    def unit_target(self) -> Target:
+        return self.__unit
 
     @property
     def continue_on_error(self) -> bool:
