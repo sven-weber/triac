@@ -4,7 +4,7 @@ import sys
 import time
 from asyncio import Event
 from threading import Thread
-from typing import Dict
+from typing import Dict, List
 from art import text2art
 
 import click
@@ -17,6 +17,7 @@ from triac.lib.errors import persist_error
 from triac.lib.generator.ansible import Ansible
 from triac.types.errors import StateMismatchError, WrappersExhaustedError
 from triac.types.execution import Execution
+from triac.types.target import Target
 from triac.ui.cli_layout import CLILayout
 
 
@@ -86,6 +87,20 @@ def exec_fuzzing_round(
             # Commit container for next round then remove
             image = docker.commit_container_to_image(container)
             execution.add_image_to_used(image)
+        except StateMismatchError as e:
+            raise e
+        except Exception as e:
+            #TODO Cleanup
+            logger.error("Encountered unexpected error during execution of round:")
+            logger.error(e)
+            logger.error("\n")
+            if stop_event.is_set() == False:
+                if execution.continue_on_error == False:
+                    logger.error("Press any key to continue with the next round...")
+                    input()
+                else:
+                    logger.error("Executing next round")
+            break #Break round loop
         finally:
             docker.remove_container(container)
 
@@ -152,10 +167,20 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
 
     time.sleep(1)
 
+def get_differential_options() -> List[str]:
+    results : List[str] = []
+    targets = [val.name for val in Target]
+    # Build all possible pairs
+    for first in range(0, len(targets)):
+        for second in range(first + 1, len(targets)):
+            results.append(f"{targets[first]}:{targets[second]}")
+    return results
+
 
 @click.command()
 @click.option(
     "--rounds",
+    "-R",
     help="Number of rounds to perform",
     type=click.IntRange(1),
     default=2,
@@ -163,6 +188,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
 )
 @click.option(
     "--wrappers-per-round",
+    "-W",
     help="The maximum number of wrappers to try in each round before starting the next round",
     type=click.IntRange(1),
     default=10,
@@ -189,6 +215,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
 )
 @click.option(
     "--keep-base-images",
+    '-K',
     help="Whether the base images that where build during the execution should be kept. This will increase the speed of future executions.",
     is_flag=True,
     default=False,
@@ -201,6 +228,12 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
     default=False,
     show_default=True,
 )
+@click.option(
+    "--differential",
+    '-D',
+    help="Enables differential testing between two tools. The tools have to be specified using one of the provided format options.",
+    type=click.Choice(get_differential_options()),
+)
 def fuzz(
     rounds,
     wrappers_per_round,
@@ -209,6 +242,7 @@ def fuzz(
     base_image,
     keep_base_images,
     continue_on_error,
+    differential
 ):
     """Start a TRIaC fuzzing session"""
 
