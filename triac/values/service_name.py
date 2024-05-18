@@ -79,4 +79,4 @@ class ServiceNameType(BaseType):
         # Choose a name and fetch the current status
         service_name = choice(to_choose)[0]
         status = ServiceStatusFetcher.fetch(service_name)
-        return ServiceNameValue("systemd-remount-fs.service", status)
+        return ServiceNameValue(service_name, status)
