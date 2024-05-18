@@ -25,7 +25,6 @@ IGNORE_PATHS_DELETE = (
     f"^/(etc$|etc/hostname$|sbin|usr/sbin|usr/lib.*|boot|bin|usr/bin|root/.ssh$)"
 )
 
-
 class PathValue(BaseValue):
     def __init__(self, val: str) -> None:
         super().__init__(val)
