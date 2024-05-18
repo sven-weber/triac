@@ -136,6 +136,7 @@ def exec_differential_test_with_wrapper(
 def check_slow_mode(execution: Execution, logger: logging.Logger):
     if execution.slow_mode:
         logger.info("Slow mode enabled. Press any key to continue with next wrapper...")
+        time.sleep(2) # Hacky UI Update
         input()
 
 def exec_fuzzing_round(
@@ -194,9 +195,7 @@ def exec_fuzzing_round(
         remove_containers(docker, containers)
 
 def print_debug_header(logger: logging.Logger):
-    logger.debug("\n\n\n\n")
-    logger.debug(text2art("TRIaC"))
-    logger.debug("\n\n\n\n")
+    logger.debug(f"\n{text2art('TRIaC')}")
     logger.debug("Starting new triac run")
 
 def remove_containers(docker: DockerClient, containers: List[Container]):

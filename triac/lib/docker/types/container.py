@@ -1,3 +1,4 @@
+import logging
 from os.path import commonprefix, dirname, join, realpath, relpath
 from typing import Any, List
 
@@ -38,6 +39,9 @@ class Container:
         encoded_obj = encode(obj)
         encoded_args = " ".join([encode(arg) for arg in arguments])
 
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Executing method {method} in container")
+
         # Call the script in the container
         res = self.base_obj.exec_run(
             workdir=TRIAC_WORKING_DIR,
@@ -51,6 +55,17 @@ class Container:
                 f"Execution of method in container failed. Exit code {res[0]}"
             )
 
+        logger.debug(f"Method {method} executed successfully")
+
         # Unpickle the result
         res = decode(res[1])
-        return res
+
+        #Log the std and stderr of the execution
+        if res["std_out"] != "":
+            logger.debug("Execution std out:")
+            logger.debug(res["std_out"])
+        if res["std_err"] != "":
+            logger.debug("Execution std err:")
+            logger.debug(res["std_err"])
+
+        return res["method_result"]

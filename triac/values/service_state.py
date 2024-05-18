@@ -12,7 +12,7 @@ class ServiceState(Enum):
     #RESTARTED = "restarted",
     
 
-class ServiceStateValue(BaseValue):
+class ServiceStateValue(BaseValue[ServiceState]):
     def __init__(self, val: ServiceState) -> None:
         super().__init__(val)
 

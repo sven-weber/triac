@@ -69,8 +69,14 @@ except Exception as e:
     print(e.getvalue())
     exit(1)
 
+# Get the output and wrap it to send it back
+result = {}
+result["method_result"] = res
+result["std_out"] = o.getvalue()
+result["std_err"] = e.getvalue()
+
 # Pickle the result
-encoded_obj = encode(res)
+encoded_obj = encode(result)
 
 # Print the result
 print(encoded_obj)

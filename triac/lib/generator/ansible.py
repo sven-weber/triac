@@ -1,5 +1,6 @@
 import logging
 from os.path import join
+from pprint import pformat
 
 from ansible_runner import run_async as ansible_run
 
@@ -73,7 +74,8 @@ all:
 
         for event in runner.events:
             if "event" in event:
-                self.__logger.debug(f"Got ansible event: {event}")
+                self.__logger.debug(f"Got ansible event:")
+                self.__logger.debug(pformat(event)) # Pretty print the event to enable better debugging
                 if event["event"] in FAILURE_EVENTS:
                     raise AnsibleError(event["event"], event)
                 elif event["event"] == "verbose" and "ERROR! We were unable to read" in event["stdout"]:
