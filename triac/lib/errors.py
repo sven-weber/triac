@@ -44,8 +44,12 @@ def persist_error(execution: Execution, e: StateMismatchError) -> None:
     target_pretty = pretty_print_state(e.target)
     actual_pretty = pretty_print_state(e.actual)
 
+    class Mapping:
+        def __getitem__(self, key):
+            return lambda x: x.__repr__()
+
     # Get diff
-    json_diff = DeepDiff(e.target, e.actual).to_json()
+    json_diff = DeepDiff(e.target, e.actual).to_json()  # (default_mapping=Mapping())
 
     # Load back into json and then merge with target
     # and actual. Not the cleanest way to do this,

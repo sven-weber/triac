@@ -1,8 +1,7 @@
 from os.path import commonprefix, dirname, join, realpath, relpath
 from typing import Any, List
 
-from triac.lib.docker.const import (TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR,
-                                    TRIAC_WORKING_DIR)
+from triac.lib.docker.const import TRIAC_DIR_IN_REPO, TRIAC_SRC_DIR, TRIAC_WORKING_DIR
 from triac.lib.encoding import decode, encode
 
 
@@ -42,6 +41,7 @@ class Container:
         # Call the script in the container
         res = self.base_obj.exec_run(
             workdir=TRIAC_WORKING_DIR,
+            user="root",
             cmd=f"python3 {self.__get_runner_path()} {TRIAC_SRC_DIR} {encoded_obj} {method} {encoded_args}",
         )
         # Check exit code

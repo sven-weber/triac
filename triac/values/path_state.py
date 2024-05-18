@@ -47,7 +47,7 @@ class PathStateValue(BaseValue):
         return self.val.transform(target)
 
     def transform_opt(self, target: Target) -> str:
-        assert(self.opt is not None)
+        assert self.opt is not None
         return self.opt.transform(target)
 
 
@@ -65,12 +65,10 @@ class PathStateType(BaseType):
 
     @staticmethod
     def __map(typ: PathState) -> Optional[FileType]:
-        if typ == PathState.FILE:
+        if typ.value == PathState.FILE:
             return FileType.FILE
-        elif typ == PathState.DIRECTORY:
+        elif typ.value == PathState.DIRECTORY:
             return FileType.DIRECTORY
-        elif typ == PathState.SYMLINK:
-            return FileType.SYMLINK
         else:
             return None
 
@@ -78,14 +76,30 @@ class PathStateType(BaseType):
         state = choice(
             [PathState.FILE, PathState.DIRECTORY, PathState.SYMLINK, PathState.ABSENT]
         )
-        path = PathType(root=self.__root, filetype=self.__map(state))
-        opt = None
+        opt: Optional[PathValue] = None
 
         if state == PathState.SYMLINK:
-            actual_state = choice([PathState.FILE, PathState.DIRECTORY])
-            path = PathType(root=self.__root, filetype=self.__map(actual_state))
-            opt = PathType(root=self.__root, filetype=self.__map(actual_state))
+            ft = choice([FileType.FILE, FileType.DIRECTORY])
+            # dest
+            path_type = PathType(
+                root=self.__root, filetype=ft, empty=ft == FileType.DIRECTORY
+            )
+            # src
+            opt_type = PathType(root=self.__root, filetype=ft, existing=True)
 
-        return PathStateValue(
-            path.generate(), state, opt if opt is None else opt.generate()
-        )
+            path = path_type.generate()
+            while opt is None or opt.val == path.val:
+                opt = opt_type.generate()
+        else:
+            path_type = PathType(
+                root=self.__root,
+                filetype=(
+                    FileType.FILE
+                    if state == PathState.FILE
+                    else FileType.DIRECTORY if state == PathState.DIRECTORY else None
+                ),
+                deletable=state == PathState.ABSENT,
+            )
+            path = path_type.generate()
+
+        return PathStateValue(path, state, opt)

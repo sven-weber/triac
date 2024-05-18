@@ -13,7 +13,7 @@ class UILoggingHandler(logging.Handler):
 
     def setFormatter(self, fmt: logging.Formatter | None) -> None:
         return super().setFormatter(fmt)
-    
+
     def setLevel(self, level: int | str) -> None:
         return super().setLevel(level)
 

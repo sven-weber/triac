@@ -33,11 +33,15 @@ class StateMismatchError(Exception):
     @property
     def actual(self):
         return self.__actual
-    
+
+
 class ExecutionShouldStopRequestedError(Exception):
     def __init__(self):
         super().__init__("")
 
+
 class TargetNotSupportedError(Exception):
     def __init__(self, target: Target):
-        super().__init__(f"The specified target {target} is not supported by this implementation")
+        super().__init__(
+            f"The specified target {target} is not supported by this implementation"
+        )

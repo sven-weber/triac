@@ -14,9 +14,11 @@ from triac.types.target import Target
 from triac.types.wrapper import State, Wrapper
 from triac.types.wrappers import Identifier, Wrappers
 
+
 class ExecutionMode(Enum):
     UNIT = "unit"
     DIFFERENTIAL = "differential"
+
 
 class Execution:
     def __init__(
@@ -29,7 +31,7 @@ class Execution:
         ui_log_level: str,
         continue_on_error: bool,
         slow_mode: bool,
-        unit: Target,
+        unit: str,
         differential: str
     ) -> None:
         self.__fuzzer = Fuzzer()
@@ -53,19 +55,18 @@ class Execution:
         self.__wrappers = Wrappers(None, [])
 
     def __parse_differential(self, differential) -> tuple[Target, Target]:
-        if (differential == None):
+        if differential == None:
             return (None, None)
-        
+
         # Parse
         split = differential.split(":")
         return (Target[split[0]], Target[split[1]])
-
 
     def load_list_of_wrapper_classes(self) -> List[type[Wrapper]]:
         logger = logging.getLogger(__name__)
         logger.info(f"Loading available wrappers for fuzzing")
 
-        self.__available_wrappers : List[Wrapper] = []
+        self.__available_wrappers: List[Wrapper] = []
         repository_root = getcwd() + "/"
         modules = glob.glob(join(repository_root, "triac", "wrappers", "*.py"))
         modules = list(map(lambda f: f.replace(repository_root, ""), modules))
@@ -118,15 +119,22 @@ class Execution:
         available = self.__available_wrappers
 
         # Filter available wrappers according to mode
-        if self.mode() == ExecutionMode.UNIT:
-            available = [elem for elem in filter(lambda w: self.unit_target in w.supported_targets(), available)]
+        if self.mode == ExecutionMode.UNIT:
+            available = [
+                elem
+                for elem in filter(
+                    lambda w: self.unit_target in w.supported_targets(), available
+                )
+            ]
         else:
             first = self.first_differential_target
             second = self.second_differential_target
             available = [
-                elem for elem in filter(
-                    lambda w: first in w.supported_targets() and second in w.supported_targets(),
-                    available
+                elem
+                for elem in filter(
+                    lambda w: first in w.supported_targets()
+                    and second in w.supported_targets(),
+                    available,
                 )
             ]
 
@@ -164,6 +172,7 @@ class Execution:
     def encode_wrappers_for_round(self) -> str:
         return self.__wrappers.encode()
 
+    @property
     def mode(self) -> ExecutionMode:
         if self.__unit != None:
             return ExecutionMode.UNIT
@@ -172,11 +181,11 @@ class Execution:
     @property
     def unit_target(self) -> Target:
         return self.__unit
-    
+
     @property
     def first_differential_target(self) -> Target:
         return self.__first_differential
-    
+
     @property
     def formatted_diff_target(self) -> str:
         return self.__formatted_diff_target

@@ -60,7 +60,10 @@ class File(Wrapper):
     def transform(target: Target, state: State) -> str:
         s = {key: value.transform(target) for key, value in state.items()}
         psv = cast(PathStateValue, state["path"])
-        s["state"] = psv.state.transform(target)
+        if psv.state == PathState.FILE:
+            s["state"] = "touch"
+        else:
+            s["state"] = psv.state.transform(target)
 
         if psv.state == PathState.SYMLINK:
             s["dest"] = psv.transform(target)
@@ -72,11 +75,13 @@ class File(Wrapper):
             else:
                 return ANSIBLE_TEMPLATE_NORMAL.format(**s)
         elif target == Target.PYINFRA:
-            s["present"] = BoolValue(psv.state != PathState.ABSENT).transform(Target.PYINFRA)
+            s["present"] = BoolValue(psv.state != PathState.ABSENT).transform(
+                Target.PYINFRA
+            )
             return PYINFRA_TEMPLATE.format(**s)
         else:
             raise UnsupportedTargetWrapperError(target, File.__name__)
-    
+
     @staticmethod
     def supported_targets() -> List[Target]:
         return [Target.ANSIBLE, Target.PYINFRA]
@@ -98,9 +103,11 @@ class File(Wrapper):
                 opt = readlink(path)
             elif isdir(path):
                 ps = PathState.DIRECTORY
-            st = lstat(path)
+            st = lstat(path if opt is None else opt)
 
-            state["path"] = PathStateValue(PathValue(path), ps, opt)
+            state["path"] = PathStateValue(
+                PathValue(path), ps, PathValue(opt) if opt is not None else None
+            )
             state["owner"] = UserValue(User(getpwuid(st.st_uid)))
             state["group"] = GroupValue(Group(getgrgid(st.st_gid)))
             state["mode"] = ModeValue(parse_mode(st.st_mode))

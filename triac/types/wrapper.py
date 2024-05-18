@@ -21,7 +21,7 @@ class Wrapper(ABC):
     @abstractmethod
     def transform(target: Target, state: State) -> str:
         pass
-    
+
     @staticmethod
     @abstractmethod
     def supported_targets() -> List[Target]:

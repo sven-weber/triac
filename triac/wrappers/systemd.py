@@ -59,7 +59,7 @@ class Systemd(Wrapper):
 
     @staticmethod
     def enabled() -> bool:
-        return True
+        return False
 
     @staticmethod
     def verify(exp: State) -> State:

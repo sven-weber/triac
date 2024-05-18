@@ -57,9 +57,8 @@ class CLILayout:
         self.__logo = Panel(Align.center(text2art("TRIaC"), vertical="middle"))
         self.__log_output = VerticalOverflowText()
 
-        #Setup logging
+        # Setup logging
         self.__configure_logging(state)
-        
 
     def __configure_logging(self, state: Execution):
         # Enable log capturing
@@ -67,11 +66,7 @@ class CLILayout:
 
         # UI Logger
         ui_handler = UILoggingHandler(self.__log_output)
-        ui_handler.setFormatter(
-            logging.Formatter(
-                fmt='%(message)s\n'
-            )
-        )
+        ui_handler.setFormatter(logging.Formatter(fmt="%(message)s\n"))
         ui_handler.setLevel(state.ui_log_level)
         ui_handler.addFilter(log_filter)
 
@@ -80,8 +75,8 @@ class CLILayout:
         file_handler.setLevel(state.log_level)
         file_handler.setFormatter(
             logging.Formatter(
-                fmt='%(asctime)s - %(name)s :: %(levelname)-8s :: %(message)s',
-                datefmt='[%Y-%m-%d %H:%M:%S]'
+                fmt="%(asctime)s - %(name)s :: %(levelname)-8s :: %(message)s",
+                datefmt="[%Y-%m-%d %H:%M:%S]",
             )
         )
         file_handler.addFilter(log_filter)
@@ -116,7 +111,7 @@ class CLILayout:
             "Round", f"{self.__state.round}/{self.__state.total_rounds}"
         )
         stats_table_1.add_row(
-            "Mode", f"{self.__state.mode().name}"
+            "Mode", f"{self.__state.mode.name}"
         )
 
         stats_table_2 = Table(show_header=False, show_lines=False, box=None)
@@ -138,7 +133,7 @@ class CLILayout:
         stats_table_2.add_row(
             "Target",
             (
-                self.__state.unit_target.name if self.__state.mode() == ExecutionMode.UNIT
+                self.__state.unit_target.name if self.__state.mode == ExecutionMode.UNIT
                 else self.__state.formatted_diff_target
             ),
         )
