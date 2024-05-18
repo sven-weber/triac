@@ -1,0 +1,14 @@
+[Unit]
+Description=PostgreSQL database server
+Documentation=man:postgres(1)
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/
+ExecStart=/usr/local/bin/start-postgres.sh
+TimeoutSec=infinity
+
+[Install]
+WantedBy=multi-user.target
