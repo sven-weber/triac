@@ -29,6 +29,11 @@ class Wrapper(ABC):
 
     @staticmethod
     @abstractmethod
+    def enabled() -> bool:
+        pass
+
+    @staticmethod
+    @abstractmethod
     def verify(exp: State) -> State:
         pass
 

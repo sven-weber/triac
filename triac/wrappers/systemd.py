@@ -58,6 +58,10 @@ class Systemd(Wrapper):
         return [Target.ANSIBLE, Target.PYINFRA]
 
     @staticmethod
+    def enabled() -> bool:
+        return True
+
+    @staticmethod
     def verify(exp: State) -> State:
         state = {}
         try:
