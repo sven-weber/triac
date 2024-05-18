@@ -28,6 +28,7 @@ class Execution:
         log_level: str,
         ui_log_level: str,
         continue_on_error: bool,
+        slow_mode: bool,
         unit: Target,
         differential: str
     ) -> None:
@@ -39,6 +40,7 @@ class Execution:
         self.__log_level = log_level
         self.__ui_log_level = ui_log_level
         self.__continue_on_error = continue_on_error
+        self.__slow_mode = slow_mode;
         self.__unit = Target[unit] if unit != None else None
         self.__formatted_diff_target = differential
         diff_target = self.__parse_differential(differential)
@@ -75,8 +77,11 @@ class Execution:
             class_name = import_path.split(".")[-1].capitalize()
             try:
                 loaded_class = getattr(mod, class_name)
-                self.__available_wrappers.append(loaded_class)
-                logger.debug(f"Loaded triac module {class_name} from {import_path}")
+                if (loaded_class.enabled() == True):
+                    self.__available_wrappers.append(loaded_class)
+                    logger.debug(f"Loaded triac module {class_name} from {import_path}")
+                else:
+                    logger.debug(f"Did not load triac module {class_name} from {import_path} because it is disabled")
             except:
                 logger.error(
                     f"Could not load wrapper module from {import_path}, assuming class name {class_name}"
@@ -183,6 +188,10 @@ class Execution:
     @property
     def continue_on_error(self) -> bool:
         return self.__continue_on_error
+
+    @property
+    def slow_mode(self) -> bool:
+        return self.__slow_mode
 
     @property
     def base_image(self) -> str:

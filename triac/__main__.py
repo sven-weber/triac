@@ -133,6 +133,10 @@ def exec_differential_test_with_wrapper(
     raise_when_stop_event_set(stop_event)
     raise_error_when_states_not_equal(first_state, second_state, logger)
 
+def check_slow_mode(execution: Execution, logger: logging.Logger):
+    if execution.slow_mode:
+        logger.info("Slow mode enabled. Press any key to continue with next wrapper...")
+        input()
 
 def exec_fuzzing_round(
     docker: DockerClient, execution: Execution,
@@ -182,6 +186,9 @@ def exec_fuzzing_round(
         # Commit container for next round
         image = docker.commit_container_to_image(container)
         execution.add_image_to_used(image)
+
+        # Check slow mode
+        check_slow_mode(execution, logger)
 
         # Remove containers
         remove_containers(docker, containers)
@@ -240,6 +247,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
             logger.error(e.actual)
             execution.set_error_for_round(e.target, e.actual)
             persist_error(execution, e)
+            check_slow_mode(execution, logger)
         except ExecutionShouldStopRequestedError as e:
             # Do nothing, the method failed because the execution should stop
             pass
@@ -339,6 +347,14 @@ def validate_options(unit: Target, differential: str):
     show_default=True,
 )
 @click.option(
+    "--slow-mode",
+    "-S",
+    help="Enables a slow mode. This means that triac pauses after each wrapper execution and waits for user input to continue. This can be very helpful for debugging or demos",
+    is_flag=True,
+    default=False,
+    show_default=True,
+)
+@click.option(
     "--unit",
     "-U",
     help="Enables unit testing a specific tool. By default, Ansible wll be tested. This option cannot be supplied while performing differential testing.",
@@ -358,6 +374,7 @@ def fuzz(
     base_image,
     keep_base_images,
     continue_on_error,
+    slow_mode,
     unit,
     differential
 ):
@@ -373,6 +390,7 @@ def fuzz(
         log_level,
         ui_log_level,
         continue_on_error,
+        slow_mode,
         unit,
         differential
     )
