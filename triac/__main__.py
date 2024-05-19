@@ -76,7 +76,7 @@ def execute_against_target(
             is_state = Ansible(wrapper, target_state, container).run()
         case Target.PYINFRA:
             logger.info(f"Executing pyinfra against target")
-            is_state = Ansible(wrapper, target_state, container).run()
+            is_state = PyInfra(wrapper, target_state, container).run()
         case _:
             raise TargetNotSupportedError(target)
 
@@ -153,7 +153,7 @@ def exec_differential_test_with_wrapper(
 
 def check_slow_mode(execution: Execution, logger: logging.Logger):
     if execution.slow_mode:
-        logger.info("Slow mode enabled. Press any key to continue with next wrapper...")
+        logger.info("Slow mode enabled. Press Enter to continue with next wrapper...")
         time.sleep(2)  # Hacky UI Update
         input()
 
@@ -287,7 +287,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
             logger.error("\n")
             if stop_event.is_set() == False:
                 if execution.continue_on_error == False:
-                    logger.error("Press any key to continue with the next round...")
+                    logger.error("Press Enter to continue with the next round...")
                     input()
                 else:
                     logger.error("Executing next round")
@@ -367,6 +367,7 @@ def validate_options(unit: Target, differential: str):
 )
 @click.option(
     "--base-image",
+    "-B",
     help="The base image to use. If not specified, one is chosen randomly each round",
     type=click.Choice([val.name for val in BaseImages]),
 )
@@ -380,6 +381,7 @@ def validate_options(unit: Target, differential: str):
 )
 @click.option(
     "--continue-on-error",
+    "-C",
     help="Whether triac should automatically continue with the execution of the next round whenever a unexpected error is encountered.",
     is_flag=True,
     default=False,

@@ -65,7 +65,7 @@ all:
         playbook_file = open(self.__playbook_path, "w+")
         playbook = self.__playbook()
         self.__logger.debug("Generated the following ansible playbook:")
-        self.__logger.debug(f"\{playbook}")
+        self.__logger.debug(f"\n{playbook}")
         playbook_file.write(playbook)
         playbook_file.close()
         pass
@@ -88,6 +88,9 @@ all:
                     and "ERROR! We were unable to read" in event["stdout"]
                 ):
                     raise AnsibleError("Invalid YAML file", event["event"])
+
+        # Cleanup the temp files
+        self.destroy()
 
         state = self.__container.execute_method(
             self.__wrapper, "verify", [self.__state]

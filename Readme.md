@@ -67,7 +67,7 @@ python -m triac --keep-base-images
 
 Without this option, TRIaC will build all used base images for each run and cleanup the images once the run is finished. While this does not leave behind data on your machine, building the images can take some time. Therefore, if you are playing around with TRIaC or developing your own wrapper it is recommended to disable the image cleanup after the run via this option.
 
-Moreover, if you plan on running TRIaC for a long time without supervision, it might make sense to enable ```--continue-on-error```. By default, TRIaC will stop the execution once a unexpected error is discovered. For example, an IaC execution might fail. In these cases, TRIaC will wait for the user to press any key before the execution continues. However, in long-running settings this might not be the preferred behavior. Therefore, you can let TRIaC continue without any user input by using this option as follows:
+Moreover, if you plan on running TRIaC for a long time without supervision, it might make sense to enable ```--continue-on-error```. By default, TRIaC will stop the execution once a unexpected error is discovered. For example, an IaC execution might fail. In these cases, TRIaC will wait for the user to press Enter before the execution continues. However, in long-running settings this might not be the preferred behavior. Therefore, you can let TRIaC continue without any user input by using this option as follows:
 
 ```
 python -m triac --continue-on-error

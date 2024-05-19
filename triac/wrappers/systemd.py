@@ -27,13 +27,15 @@ ANSIBLE_TEMPLATE = """ansible.builtin.systemd_service:
   state: {state}
 """
 
-PYINFRA_TEMPLATE = """systemd.service(,
+PYINFRA_TEMPLATE = """
+from pyinfra.operations import systemd
+
+systemd.service(
     {name},
     enabled={enabled},
     {state}
 )
 """
-
 
 class Systemd(Wrapper):
     def __init__(self) -> None:
@@ -64,7 +66,7 @@ class Systemd(Wrapper):
 
     @staticmethod
     def enabled() -> bool:
-        return True
+        return False
 
     @staticmethod
     def determine_enabled(reached_status: ServiceStatus) -> bool:
@@ -85,12 +87,15 @@ class Systemd(Wrapper):
                 # The service might not be running anymore but it has run since the last check
                 # -> It was started
                 return ServiceState.STARTED
-            elif service.status.condition_tst < (
-                reached_status.condition_tst and reached_status.condition_res == False
+            elif (
+                service.status.condition_tst != reached_status.condition_tst
+                and reached_status.condition_res == False
             ):
                 # We tried to start the service, but it is not running because a condition
                 # failed. However, the condition timestamp was updated, meaning that
                 # IaC successfully tried to start the service
+                # Note: Sometimes systed updates the timestamp from a number to 0
+                # after the check for some reason. Therefore, we check for any changes
                 return ServiceState.STARTED
             elif (
                 service.status.condition_res == False

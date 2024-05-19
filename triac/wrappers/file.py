@@ -33,10 +33,12 @@ ANSIBLE_TEMPLATE_LINK = """ansible.builtin.file:
   mode: {mode}
 """
 
-PYINFRA_TEMPLATE = """files.file(,
-    path={path},
+PYINFRA_TEMPLATE = """from pyinfra.operations import files
+
+files.file(
+    {path},
     present={present},
-    user={user},
+    user={owner},
     group={group},
     mode={mode},
 )

@@ -5,6 +5,7 @@ import pickle
 from contextlib import redirect_stderr, redirect_stdout
 from glob import glob
 from os.path import join
+import re
 from sys import argv
 
 from triac.lib.encoding import decode, encode
@@ -41,7 +42,9 @@ base_path = import_path[0 : len(import_path) - len(last_folder)]
 modules = list(map(lambda f: f.replace(base_path, ""), modules))
 
 for module in modules:
-    import_path = module.replace("/", ".").replace(".py", "")
+    # We only want to replace the .py at the end
+    # Otherwise, we will screw up files like lib.pysmth.py
+    import_path = re.sub(".py$", "", module.replace("/", "."))
     mod = __import__(import_path, fromlist=[None])
 
 # Read in the object
