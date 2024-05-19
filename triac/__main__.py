@@ -197,6 +197,7 @@ def exec_fuzzing_round(
             target_state,
             container,
             containers,
+            image,
             wrapper,
             logger,
             stop_event,
@@ -275,9 +276,10 @@ def execute_wrapper(
     target_state: State,
     container: Container,
     containers: List[Container],
+    image: BaseImages,
     wrapper: Wrapper,
     logger: logging.Logger,
-    stop_event=Event,
+    stop_event: Event,
 ):
     if execution.mode == ExecutionMode.UNIT:
         # Unit test
@@ -352,6 +354,7 @@ def exec_replay(execution: Execution, stop_event: Event):
                 target_state,
                 container,
                 containers,
+                image,
                 wrapper,
                 logger,
                 stop_event,

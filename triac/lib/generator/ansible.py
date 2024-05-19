@@ -52,7 +52,7 @@ all:
             task += "\n"
 
         return f"""
-- name: {type(self.__wrapper).__name__}
+- name: {self.__wrapper.__name__}
   hosts: target
   tasks:
     - {task}"""
