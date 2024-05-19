@@ -9,8 +9,7 @@ from triac.types.target import Target
 class ServiceState(Enum):
     STARTED = "started"
     STOPPED = "stopped"
-    # RELOADED = "reloaded",
-    # RESTARTED = "restarted",
+    RESTARTED = "restarted",
 
 
 class ServiceStateValue(BaseValue[ServiceState]):
@@ -22,10 +21,8 @@ class ServiceStateValue(BaseValue[ServiceState]):
             return f"'{self.val.value}'"  # single quotes in ansible cannot be evaluated with variables
         elif target == Target.PYINFRA:
             match self.val:
-                #case ServiceState.RELOADED:
-                #    return "reloaded=True"
-                #case ServiceState.RESTARTED:
-                #    return "restarted=True"
+                case ServiceState.RESTARTED:
+                    return "restarted=True"
                 case ServiceState.STARTED:
                     return "running=True"
                 case ServiceState.STOPPED:

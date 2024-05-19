@@ -9,6 +9,9 @@ class ServiceStatus:
         active: str,
         condition_res: bool,
         active_entered_tst: int,
+        active_exit_tst : int,
+        inactive_entered_tst: int,
+        inactive_exit_tst: int,
         condition_tst: int,
     ) -> None:
         self.__enabled = enabled
@@ -16,6 +19,9 @@ class ServiceStatus:
         self.__active = active
         self.__condition_res = condition_res
         self.__active_entered_tst = active_entered_tst
+        self.__active_exit_tst = active_exit_tst
+        self.__inactive_entered_tst = inactive_entered_tst
+        self.__inactive_exit_tst = inactive_exit_tst
         self.__condition_tst = condition_tst
 
     @property
@@ -53,6 +59,18 @@ class ServiceStatus:
         return self.__active_entered_tst
 
     @property
+    def active_exit_tst(self) -> int:
+        return self.__active_exit_tst
+    
+    @property
+    def inactive_entered_tst(self) -> int:
+        return self.__inactive_entered_tst
+
+    @property
+    def inactive_exit_tst(self) -> int:
+        return self.__inactive_exit_tst
+        
+    @property
     def condition_res(self) -> bool:
         return self.__condition_res
 
@@ -79,6 +97,9 @@ class ServiceStatusFetcher:
 
         # Timestamps
         active_entered_tst = service.Unit.ActiveEnterTimestampMonotonic
+        active_exit_tst = service.Unit.ActiveExitTimestampMonotonic
+        inactive_entered_tst = service.Unit.InactiveEnterTimestampMonotonic
+        inactive_exit_tst = service.Unit.InactiveExitTimestampMonotonic
         condition_tst = service.Unit.ConditionTimestampMonotonic
 
         return ServiceStatus(
@@ -87,5 +108,8 @@ class ServiceStatusFetcher:
             active,
             condition_res,
             active_entered_tst,
-            condition_tst,
+            active_exit_tst,
+            inactive_entered_tst,
+            inactive_exit_tst,
+            condition_tst
         )
