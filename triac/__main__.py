@@ -34,12 +34,14 @@ def build_base_image(
     docker: DockerClient, execution: Execution, image_cache: Dict[BaseImages, str]
 ) -> BaseImages:
     # Build the base image or take from cache
-    if execution.base_image not in image_cache:
-        image = docker.build_base_image(execution.base_image)
-        execution.add_image_to_used(image)
-        image_cache[execution.base_image] = image
+    # if execution.base_image not in image_cache:
+    #     image = docker.build_base_image(execution.base_image)
+    #     execution.add_image_to_used(image)
+    #     image_cache[execution.base_image] = image
+    return docker.get_client().images.get(f"triac:DEBIAN12_POSTGRES16")
 
-    return image_cache[execution.base_image]
+
+# return image_cache[execution.base_image]
 
 
 def create_container_for_image(

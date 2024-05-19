@@ -1,10 +1,18 @@
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
 from triac.types.target import Target
+from random import choice
+
+
+class PostgresConnectionParameters:
+    def __init__(self, host: str, user: str, password: str) -> None:
+        self.host = host
+        self.user = user
+        self.password = password
 
 
 class PostgresURIValue(BaseValue):
-    def __init__(self, val: str) -> None:
+    def __init__(self, val: PostgresConnectionParameters) -> None:
         super().__init__(val)
 
     def __repr__(self):
@@ -12,14 +20,21 @@ class PostgresURIValue(BaseValue):
 
     def transform(self, target: Target) -> str:
         if target == Target.ANSIBLE:
-            return f"'{self.val.name}'"  # single quotes in ansible cannot be evaluated with variables
-        elif target == Target.PYINFRA:
-            return f'"{self.val.name}"'
+            return f"""login_host: '{self.val.host}'
+  login_user: '{self.val.user}'
+  login_password: '{self.val.password}'"""
         else:
             raise UnsupportedTargetValueError(target, self)
 
 
-POSTGRES_URIS = ["psql://root:root@localhost" "psql://localhost"]
+# DEFAULT_CHECK_URI = "dbname=postgres user=postgres password=postgres host=::1"
+DEFAULT_CHECK_URI = "host=localhost user=postgres password=postgres"
+
+POSTGRES_PARAMS = [
+    PostgresConnectionParameters("localhost", "postgres", "postgres"),
+    PostgresConnectionParameters("127.0.0.1", "postgres", "postgres"),
+    PostgresConnectionParameters("::1", "postgres", "postgres"),
+]
 
 
 class PostgresURIType(BaseType):
@@ -27,4 +42,4 @@ class PostgresURIType(BaseType):
         super().__init__()
 
     def generate(self) -> PostgresURIValue:
-        return UserValue(User(user))
+        return PostgresURIValue(choice(POSTGRES_PARAMS))

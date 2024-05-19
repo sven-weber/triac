@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 from os import getcwd
 from os.path import join
+from humps import pascalize
 from typing import Any, List, Set, Tuple
 
 from triac.lib.docker.types.base_images import BaseImages
@@ -80,7 +81,8 @@ class Execution:
         for module in modules:
             import_path = module.replace("/", ".").replace(".py", "")
             mod = __import__(import_path, fromlist=[None])
-            class_name = import_path.split(".")[-1].capitalize()
+            file_name = import_path.split(".")[-1]
+            class_name = pascalize(file_name)
             try:
                 loaded_class = getattr(mod, class_name)
                 if loaded_class.enabled() == True:
