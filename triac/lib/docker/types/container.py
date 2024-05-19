@@ -60,7 +60,7 @@ class Container:
         # Unpickle the result
         res = decode(res[1])
 
-        #Log the std and stderr of the execution
+        # Log the std and stderr of the execution
         if res["std_out"] != "":
             logger.debug("Execution std out:")
             logger.debug(res["std_out"])

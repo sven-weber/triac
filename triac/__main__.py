@@ -5,9 +5,9 @@ import time
 from asyncio import Event
 from threading import Thread
 from typing import Container, Dict, List
-from art import text2art
 
 import click
+from art import text2art
 from deepdiff import DeepDiff
 
 from triac.lib.docker.client import DockerClient
@@ -15,7 +15,13 @@ from triac.lib.docker.const import get_base_image_identifiers
 from triac.lib.docker.types.base_images import BaseImages
 from triac.lib.errors import persist_error
 from triac.lib.generator.ansible import Ansible
-from triac.types.errors import ExecutionShouldStopRequestedError, StateMismatchError, TargetNotSupportedError, WrappersExhaustedError
+from triac.lib.generator.pyinfra import PyInfra
+from triac.types.errors import (
+    ExecutionShouldStopRequestedError,
+    StateMismatchError,
+    TargetNotSupportedError,
+    WrappersExhaustedError,
+)
 from triac.types.execution import Execution, ExecutionMode
 from triac.types.target import Target
 from triac.types.wrapper import State, Wrapper
@@ -23,9 +29,7 @@ from triac.ui.cli_layout import CLILayout
 
 
 def build_base_image(
-        docker: DockerClient,
-        execution: Execution, 
-        image_cache: Dict[BaseImages, str]
+    docker: DockerClient, execution: Execution, image_cache: Dict[BaseImages, str]
 ) -> BaseImages:
     # Build the base image or take from cache
     if execution.base_image not in image_cache:
@@ -35,18 +39,17 @@ def build_base_image(
 
     return image_cache[execution.base_image]
 
+
 def create_container_for_image(
-        docker: DockerClient, image: BaseImages,
-        containers: List[Container]
+    docker: DockerClient, image: BaseImages, containers: List[Container]
 ):
     container = docker.run_container_from_image(image)
     containers.append(container)
     return container
 
+
 def get_next_wrapper(
-        execution: Execution,
-        container: Container,
-        logger: logging.Logger
+    execution: Execution, container: Container, logger: logging.Logger
 ):
     try:
         return execution.get_next_wrapper(container)
@@ -54,36 +57,41 @@ def get_next_wrapper(
         logger.error("There are no wrappers that can run in the reached state")
         raise e
 
+
 def raise_when_stop_event_set(stop_event: Event):
     if stop_event.is_set():
         raise ExecutionShouldStopRequestedError()
+
 
 def execute_against_target(
     target: Target,
     target_state: State,
     container: Container,
     wrapper: Wrapper,
-    logger: logging.Logger
+    logger: logging.Logger,
 ) -> State:
     match target:
         case Target.ANSIBLE:
             logger.info(f"Executing Ansible against target")
             is_state = Ansible(wrapper, target_state, container).run()
         case Target.PYINFRA:
-            #TODO: Change to actual pyinfra
             logger.info(f"Executing pyinfra against target")
             is_state = Ansible(wrapper, target_state, container).run()
         case _:
             raise TargetNotSupportedError(target)
-        
+
     logger.debug(f"Got the following actual state:")
     logger.debug(is_state)
 
     return is_state
 
-def raise_error_when_states_not_equal(is_state: State, target_state: State, logger: logging.Logger):
+
+def raise_error_when_states_not_equal(
+    is_state: State, target_state: State, logger: logging.Logger
+):
     if len(DeepDiff(is_state, target_state).affected_root_keys) > 0:
         raise StateMismatchError(target_state, is_state)
+
 
 def exec_unit_test_with_wrapper(
     target: Target,
@@ -91,7 +99,7 @@ def exec_unit_test_with_wrapper(
     container: Container,
     wrapper: Wrapper,
     logger: logging.Logger,
-    stop_event: Event
+    stop_event: Event,
 ) -> State:
     # Execute against the target
     is_state = execute_against_target(target, target_state, container, wrapper, logger)
@@ -103,6 +111,7 @@ def exec_unit_test_with_wrapper(
 
     return is_state
 
+
 def exec_differential_test_with_wrapper(
     execution: Execution,
     target_state: State,
@@ -112,37 +121,49 @@ def exec_differential_test_with_wrapper(
     stop_event: Event,
     docker: DockerClient,
     image: BaseImages,
-    containers: List[Container]
+    containers: List[Container],
 ):
     # Execute first tool against target
     first_state = exec_unit_test_with_wrapper(
-        execution.first_differential_target, target_state, container,
-        wrapper, logger, stop_event
+        execution.first_differential_target,
+        target_state,
+        container,
+        wrapper,
+        logger,
+        stop_event,
     )
-    
+
     # Create second container for second tool
     raise_when_stop_event_set(stop_event)
     second_container = create_container_for_image(docker, image, containers)
     raise_when_stop_event_set(stop_event)
     second_state = exec_unit_test_with_wrapper(
-        execution.second_differential_target, target_state, second_container,
-        wrapper, logger, stop_event
+        execution.second_differential_target,
+        target_state,
+        second_container,
+        wrapper,
+        logger,
+        stop_event,
     )
 
     # Check the states for equality
     raise_when_stop_event_set(stop_event)
     raise_error_when_states_not_equal(first_state, second_state, logger)
 
+
 def check_slow_mode(execution: Execution, logger: logging.Logger):
     if execution.slow_mode:
         logger.info("Slow mode enabled. Press any key to continue with next wrapper...")
-        time.sleep(2) # Hacky UI Update
+        time.sleep(2)  # Hacky UI Update
         input()
 
+
 def exec_fuzzing_round(
-    docker: DockerClient, execution: Execution,
-    stop_event: Event, image_cache: Dict[BaseImages, str],
-    containers: List[Container]
+    docker: DockerClient,
+    execution: Execution,
+    stop_event: Event,
+    image_cache: Dict[BaseImages, str],
+    containers: List[Container],
 ):
     # Start new round
     execution.start_new_round()
@@ -171,16 +192,26 @@ def exec_fuzzing_round(
         if execution.mode == ExecutionMode.UNIT:
             # Unit test
             exec_unit_test_with_wrapper(
-                execution.unit_target, target_state, container,
-                wrapper, logger, stop_event
+                execution.unit_target,
+                target_state,
+                container,
+                wrapper,
+                logger,
+                stop_event,
             )
             logger.info(f"Target state reached, wrapper finished")
         else:
             # Differential test
             exec_differential_test_with_wrapper(
-                execution, target_state, container,
-                wrapper, logger, stop_event,
-                docker, image, containers
+                execution,
+                target_state,
+                container,
+                wrapper,
+                logger,
+                stop_event,
+                docker,
+                image,
+                containers,
             )
             logger.info("Target state reached by all targets, wrapper finished")
 
@@ -194,20 +225,19 @@ def exec_fuzzing_round(
         # Remove containers
         remove_containers(docker, containers)
 
+
 def print_debug_header(logger: logging.Logger):
     logger.debug(f"\n{text2art('TRIaC')}")
     logger.debug("Starting new triac run")
+
 
 def remove_containers(docker: DockerClient, containers: List[Container]):
     for container in containers:
         docker.remove_container(container)
     containers.clear()
 
-def perform_cleanup(
-        execution: Execution,
-        logger: logging.Logger,
-        docker: DockerClient
-):
+
+def perform_cleanup(execution: Execution, logger: logging.Logger, docker: DockerClient):
     logger.info("Cleaning up resources")
     logger.debug("The following images where used during execution:")
     logger.debug(execution.used_docker_images)
@@ -219,6 +249,7 @@ def perform_cleanup(
     for image in to_remove:
         logger.debug(f"Removing image {image}")
         docker.remove_image(image)
+
 
 def exec_fuzzing(execution: Execution, stop_event: Event):
     logger = logging.getLogger(__name__)
@@ -235,7 +266,7 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
 
     # Execute all the rounds
     while execution.rounds_left() and stop_event.is_set() == False:
-        containers = [] # Container to cleanup
+        containers = []  # Container to cleanup
         try:
             exec_fuzzing_round(docker, execution, stop_event, image_cache, containers)
         except StateMismatchError as e:
@@ -277,8 +308,9 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
 
     time.sleep(1)
 
+
 def get_differential_options() -> List[str]:
-    results : List[str] = []
+    results: List[str] = []
     targets = [val.name for val in Target]
     # Build all possible pairs
     for first in range(0, len(targets)):
@@ -286,13 +318,21 @@ def get_differential_options() -> List[str]:
             results.append(f"{targets[first]}:{targets[second]}")
     return results
 
+
 def validate_options(unit: Target, differential: str):
     if unit != None and differential != None:
-        print("Error: You cannot enable differential and unit testing at the same time", file=sys.stderr)
+        print(
+            "Error: You cannot enable differential and unit testing at the same time",
+            file=sys.stderr,
+        )
         sys.exit(1)
     elif unit == None and differential == None:
-        print("Error: You have to enable either unit or differential testing", file=sys.stderr)
+        print(
+            "Error: You have to enable either unit or differential testing",
+            file=sys.stderr,
+        )
         sys.exit(1)
+
 
 @click.command()
 @click.option(
@@ -332,7 +372,7 @@ def validate_options(unit: Target, differential: str):
 )
 @click.option(
     "--keep-base-images",
-    '-K',
+    "-K",
     help="Whether the base images that where build during the execution should be kept. This will increase the speed of future executions.",
     is_flag=True,
     default=False,
@@ -357,11 +397,11 @@ def validate_options(unit: Target, differential: str):
     "--unit",
     "-U",
     help="Enables unit testing a specific tool. By default, Ansible wll be tested. This option cannot be supplied while performing differential testing.",
-    type=click.Choice([val.name for val in Target])
+    type=click.Choice([val.name for val in Target]),
 )
 @click.option(
     "--differential",
-    '-D',
+    "-D",
     help="Enables differential testing between two tools. The tools have to be specified using one of the provided format options.",
     type=click.Choice(get_differential_options()),
 )
@@ -375,7 +415,7 @@ def fuzz(
     continue_on_error,
     slow_mode,
     unit,
-    differential
+    differential,
 ):
     """Start a TRIaC fuzzing session"""
     validate_options(unit, differential)
@@ -391,7 +431,7 @@ def fuzz(
         continue_on_error,
         slow_mode,
         unit,
-        differential
+        differential,
     )
 
     # TODO: Enable replay

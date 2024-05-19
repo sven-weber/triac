@@ -2,6 +2,7 @@ import importlib
 from posixpath import basename
 from random import choice
 from typing import List
+
 from triac.lib.service import ServiceStatus, ServiceStatusFetcher
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
@@ -18,6 +19,7 @@ ignore_list = ["ssh.service", "sshd.service", "systemd-networkd-wait-online.serv
 # can be done with those services
 valid_status = ["enabled", "enabled-runtime", "linked", "linked-runtime", "disabled"]
 
+
 class ServiceNameValue(BaseValue[str]):
     def __init__(self, val: str, status: ServiceStatus = None) -> None:
         super().__init__(val)
@@ -26,7 +28,7 @@ class ServiceNameValue(BaseValue[str]):
     @property
     def status(self) -> ServiceStatus:
         return self.__status
-    
+
     def transform(self, target: Target) -> str:
         if target == Target.ANSIBLE:
             return f"'{self.val}'"  # single quotes in ansible cannot be evaluated with variables
@@ -34,9 +36,10 @@ class ServiceNameValue(BaseValue[str]):
             return f'"{self.val}"'
         else:
             raise UnsupportedTargetValueError(target, self)
-        
+
     def __repr__(self):
         return super().__repr__()
+
 
 class ServiceNameType(BaseType):
     def __init__(self):
@@ -51,10 +54,7 @@ class ServiceNameType(BaseType):
             for elem in manager.Manager.ListUnitFiles()
         ]
         # Filter out those that should be ignored
-        return [elem for elem in filter(
-            lambda x: x[0] not in ignore_list,
-            all
-        )]
+        return [elem for elem in filter(lambda x: x[0] not in ignore_list, all)]
 
     def generate(self) -> ServiceNameValue:
         # Dynamically load pystemd
@@ -64,17 +64,16 @@ class ServiceNameType(BaseType):
         # Filter the units to only contain services
         # without parameters (those without @, otherwise it is unclear
         # how those services should be addressed)
-        services = [elem for elem in filter(
-            lambda x: x[0].endswith(".service") and "@" not in x[0],
-            units
-        )]
+        services = [
+            elem
+            for elem in filter(
+                lambda x: x[0].endswith(".service") and "@" not in x[0], units
+            )
+        ]
 
         # Filter the services to only include those with
         # a valid status
-        to_choose = [elem for elem in filter(
-            lambda x: x[1] in valid_status,
-            services
-        )]
+        to_choose = [elem for elem in filter(lambda x: x[1] in valid_status, services)]
 
         # Choose a name and fetch the current status
         service_name = choice(to_choose)[0]

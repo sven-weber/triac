@@ -1,9 +1,9 @@
 from enum import Enum
-from os import walk, listdir
+from os import listdir, walk
 from os.path import islink, join, realpath
 from random import choice, randint, randrange
-from string import ascii_letters, digits
 from re import match
+from string import ascii_letters, digits
 from typing import Any, Dict, Optional, cast
 
 from triac.lib.docker.const import TRIAC_WORKING_DIR
@@ -21,7 +21,9 @@ class FileType(Enum):
 DESCENT_FACTOR = 1.5
 BACKTRACK_FACTOR = 2
 IGNORE_PATHS = f"^/(tmp|proc|mnt|run|dev|lib\\w*|sys|{TRIAC_WORKING_DIR}|\\.socket$)"
-IGNORE_PATHS_DELETE = f"^/(etc$|etc/hostname$|sbin|usr/sbin|usr/lib.*|boot|bin|usr/bin|root/.ssh$)"
+IGNORE_PATHS_DELETE = (
+    f"^/(etc$|etc/hostname$|sbin|usr/sbin|usr/lib.*|boot|bin|usr/bin|root/.ssh$)"
+)
 
 
 class PathValue(BaseValue):
@@ -41,7 +43,14 @@ class PathValue(BaseValue):
 
 
 class NoPathError(Exception):
-    def __init__(self, existing: bool, filetype: FileType, deletable: bool, empty: bool, cause: int):
+    def __init__(
+        self,
+        existing: bool,
+        filetype: FileType,
+        deletable: bool,
+        empty: bool,
+        cause: int,
+    ):
         super().__init__(
             f"No path matching the required options: existing={existing}, filetype={filetype}, deletable={deletable}, empty={empty}, cause={cause}"
         )
@@ -72,10 +81,10 @@ def stochastic_walk(
         files = []
 
     ddirs = [
-            dir
-            for (dir, abs) in map(lambda p: (p, join(root, p)), dirs)
-            if not match(IGNORE_PATHS, abs)
-        ]
+        dir
+        for (dir, abs) in map(lambda p: (p, join(root, p)), dirs)
+        if not match(IGNORE_PATHS, abs)
+    ]
     print(set(dirs) - set(ddirs))
     dirs = ddirs
     if stop:  # we're done searching, take something from the current directory
@@ -84,7 +93,8 @@ def stochastic_walk(
                 return root
 
             if file_type == FileType.DIRECTORY:
-                lst = [dir
+                lst = [
+                    dir
                     for (dir, abs) in map(lambda p: (p, join(root, p)), dirs)
                     # deletable ==> not match(..)
                     if (not deletable or not match(IGNORE_PATHS_DELETE, abs))
@@ -113,7 +123,7 @@ def stochastic_walk(
                 return join(root, choice(lst))
         else:  # file/folder should not exist, give a random name
             return join(root, random_name(randrange(5, 15, 1)))
-    else: # cd into another folder
+    else:  # cd into another folder
         if len(dirs) == 0:  # backtracking
             if abs_root == root:
                 raise NoPathError(existing, file_type, deletable, empty, 2)
@@ -169,20 +179,22 @@ class PathType(BaseType):
         path = None
         for _ in range(0, 100):
             # try:
-                path = stochastic_walk(
-                    root=self.root,
-                    abs_root=self.root,
-                    deletable=self._deletable,
-                    empty=self._empty,
-                    existing=opts["existing"],
-                    file_type=opts["filetype"],
-                    stop_chance=0.005,
-                )
-                break
-            # except NoPathError:
-            #     continue
+            path = stochastic_walk(
+                root=self.root,
+                abs_root=self.root,
+                deletable=self._deletable,
+                empty=self._empty,
+                existing=opts["existing"],
+                file_type=opts["filetype"],
+                stop_chance=0.005,
+            )
+            break
+        # except NoPathError:
+        #     continue
 
         if path == None:
-            raise NoPathError(opts["existing"], opts["filetype"], self._deletable, self._empty, 3)
+            raise NoPathError(
+                opts["existing"], opts["filetype"], self._deletable, self._empty, 3
+            )
 
         return PathValue(path)

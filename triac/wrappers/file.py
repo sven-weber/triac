@@ -85,7 +85,7 @@ class File(Wrapper):
     @staticmethod
     def supported_targets() -> List[Target]:
         return [Target.ANSIBLE, Target.PYINFRA]
-    
+
     @staticmethod
     def enabled() -> bool:
         return True

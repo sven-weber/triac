@@ -63,7 +63,10 @@ all:
         inventory_file.close()
 
         playbook_file = open(self.__playbook_path, "w+")
-        playbook_file.write(self.__playbook())
+        playbook = self.__playbook()
+        self.__logger.debug("Generated the following ansible playbook:")
+        self.__logger.debug(f"\{playbook}")
+        playbook_file.write(playbook)
         playbook_file.close()
         pass
 
@@ -75,10 +78,15 @@ all:
         for event in runner.events:
             if "event" in event:
                 self.__logger.debug(f"Got ansible event:")
-                self.__logger.debug(pformat(event)) # Pretty print the event to enable better debugging
+                self.__logger.debug(
+                    pformat(event)
+                )  # Pretty print the event to enable better debugging
                 if event["event"] in FAILURE_EVENTS:
                     raise AnsibleError(event["event"], event)
-                elif event["event"] == "verbose" and "ERROR! We were unable to read" in event["stdout"]:
+                elif (
+                    event["event"] == "verbose"
+                    and "ERROR! We were unable to read" in event["stdout"]
+                ):
                     raise AnsibleError("Invalid YAML file", event["event"])
 
         state = self.__container.execute_method(

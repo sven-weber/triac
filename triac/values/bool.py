@@ -20,6 +20,7 @@ class BoolValue(BaseValue):
     def __repr__(self):
         return str(self.val)
 
+
 class BoolType(BaseType):
     def __init__(self) -> None:
         super().__init__()

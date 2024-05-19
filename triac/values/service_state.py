@@ -1,5 +1,6 @@
 from enum import Enum
 from random import choice
+
 from triac.types.base import BaseType, BaseValue
 from triac.types.errors import UnsupportedTargetValueError
 from triac.types.target import Target
@@ -8,9 +9,9 @@ from triac.types.target import Target
 class ServiceState(Enum):
     STARTED = "started"
     STOPPED = "stopped"
-    #RELOADED = "reloaded",
-    #RESTARTED = "restarted",
-    
+    # RELOADED = "reloaded",
+    # RESTARTED = "restarted",
+
 
 class ServiceStateValue(BaseValue[ServiceState]):
     def __init__(self, val: ServiceState) -> None:
@@ -34,6 +35,7 @@ class ServiceStateValue(BaseValue[ServiceState]):
 
     def __repr__(self):
         return self.val.name
+
 
 class ServiceStateType(BaseType):
     def __init__(self):

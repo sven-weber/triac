@@ -110,9 +110,7 @@ class CLILayout:
         stats_table_1.add_row(
             "Round", f"{self.__state.round}/{self.__state.total_rounds}"
         )
-        stats_table_1.add_row(
-            "Mode", f"{self.__state.mode.name}"
-        )
+        stats_table_1.add_row("Mode", f"{self.__state.mode.name}")
 
         stats_table_2 = Table(show_header=False, show_lines=False, box=None)
         stats_table_2.add_column("name")
@@ -133,7 +131,8 @@ class CLILayout:
         stats_table_2.add_row(
             "Target",
             (
-                self.__state.unit_target.name if self.__state.mode == ExecutionMode.UNIT
+                self.__state.unit_target.name
+                if self.__state.mode == ExecutionMode.UNIT
                 else self.__state.formatted_diff_target
             ),
         )

@@ -1,7 +1,7 @@
-from enum import Enum
 import glob
 import logging
 from datetime import datetime
+from enum import Enum
 from os import getcwd
 from os.path import join
 from typing import Any, List, Set, Tuple
@@ -32,7 +32,7 @@ class Execution:
         continue_on_error: bool,
         slow_mode: bool,
         unit: str,
-        differential: str
+        differential: str,
     ) -> None:
         self.__fuzzer = Fuzzer()
         self.__user_preferred_base_image = user_preferred_base_image
@@ -42,7 +42,7 @@ class Execution:
         self.__log_level = log_level
         self.__ui_log_level = ui_log_level
         self.__continue_on_error = continue_on_error
-        self.__slow_mode = slow_mode;
+        self.__slow_mode = slow_mode
         self.__unit = Target[unit] if unit != None else None
         self.__formatted_diff_target = differential
         diff_target = self.__parse_differential(differential)
@@ -78,11 +78,13 @@ class Execution:
             class_name = import_path.split(".")[-1].capitalize()
             try:
                 loaded_class = getattr(mod, class_name)
-                if (loaded_class.enabled() == True):
+                if loaded_class.enabled() == True:
                     self.__available_wrappers.append(loaded_class)
                     logger.debug(f"Loaded triac module {class_name} from {import_path}")
                 else:
-                    logger.debug(f"Did not load triac module {class_name} from {import_path} because it is disabled")
+                    logger.debug(
+                        f"Did not load triac module {class_name} from {import_path} because it is disabled"
+                    )
             except:
                 logger.error(
                     f"Could not load wrapper module from {import_path}, assuming class name {class_name}"

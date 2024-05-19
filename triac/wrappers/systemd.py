@@ -1,9 +1,8 @@
 import json
+import logging
 import subprocess
 from copy import deepcopy
 from grp import getgrgid
-import importlib
-import logging
 from os import lstat, readlink
 from os.path import isdir, islink
 from pwd import getpwuid
@@ -35,6 +34,7 @@ PYINFRA_TEMPLATE = """systemd.service(,
 )
 """
 
+
 class Systemd(Wrapper):
     def __init__(self) -> None:
         super().__init__()
@@ -53,10 +53,7 @@ class Systemd(Wrapper):
         # Build the state dictionary
         s = {key: value.transform(target) for key, value in state.items()}
         if target == Target.ANSIBLE:
-            playbook = ANSIBLE_TEMPLATE.format(**s)
-            logger.debug("Submitting following playbook to ansible")
-            logger.debug(f"\n{playbook}")
-            return playbook
+            return ANSIBLE_TEMPLATE.format(**s)
         elif target == Target.PYINFRA:
             return PYINFRA_TEMPLATE.format(**s)
         else:
@@ -67,16 +64,18 @@ class Systemd(Wrapper):
 
     @staticmethod
     def enabled() -> bool:
-        return False
+        return True
 
     @staticmethod
-    def determine_enabled(reached_status : ServiceStatus) -> bool:
-        return (
-            reached_status.enabled in ["enabled", "linked"]
-        )
+    def determine_enabled(reached_status: ServiceStatus) -> bool:
+        return reached_status.enabled in ["enabled", "linked"]
 
     @staticmethod
-    def determine_state(service : ServiceNameValue, target_state : ServiceStateValue, reached_status : ServiceStatus) -> ServiceState:
+    def determine_state(
+        service: ServiceNameValue,
+        target_state: ServiceStateValue,
+        reached_status: ServiceStatus,
+    ) -> ServiceState:
         if target_state.val == ServiceState.STARTED:
             # If the service should have been started
             if reached_status.active in ["active"]:
@@ -86,12 +85,17 @@ class Systemd(Wrapper):
                 # The service might not be running anymore but it has run since the last check
                 # -> It was started
                 return ServiceState.STARTED
-            elif service.status.condition_tst < (reached_status.condition_tst and reached_status.condition_res == False):
+            elif service.status.condition_tst < (
+                reached_status.condition_tst and reached_status.condition_res == False
+            ):
                 # We tried to start the service, but it is not running because a condition
                 # failed. However, the condition timestamp was updated, meaning that
                 # IaC successfully tried to start the service
                 return ServiceState.STARTED
-            elif service.status.condition_res == False and reached_status.condition_res == False:
+            elif (
+                service.status.condition_res == False
+                and reached_status.condition_res == False
+            ):
                 # There is the weird behavior that systemd reports that it checked a condition
                 # But is does not update the timer. So in these cases where the condition
                 # Was false before and it still is we just says the service was tried to be started
@@ -104,13 +108,13 @@ class Systemd(Wrapper):
             if reached_status.active in ["inactive"]:
                 # It has been stopped, great!
                 return ServiceState.STOPPED
-            
+
             # Otherwise return stopped
             return ServiceState.STARTED
-        
+
         # Fallback TODO: implement
         return ServiceState.STARTED
-    
+
     @staticmethod
     def is_enable_edge_case(service_name: str):
         """
@@ -125,7 +129,9 @@ class Systemd(Wrapper):
         # and checking of the corresponding error message is return
         # If this is the case, we will treat the service as enabled,
         # Although it is in fact not
-        result = subprocess.run(['systemctl', 'enable', service_name], capture_output=True, text=True)
+        result = subprocess.run(
+            ["systemctl", "enable", service_name], capture_output=True, text=True
+        )
         if result.stderr.startswith("The unit files have no installation config"):
             return True
         else:
@@ -145,17 +151,23 @@ class Systemd(Wrapper):
         state = {}
 
         # Get targets
-        service_name : ServiceNameValue = exp["name"]
-        target_state : ServiceStateValue = exp["state"]
+        service_name: ServiceNameValue = exp["name"]
+        target_state: ServiceStateValue = exp["state"]
 
         # Fetch new service status
         reached_status = ServiceStatusFetcher.fetch(service_name.val)
-        
+
         # Determine new properties
         enabled = Systemd.determine_enabled(reached_status)
-        reached_state = Systemd.determine_state(service_name, target_state, reached_status)
+        reached_state = Systemd.determine_state(
+            service_name, target_state, reached_status
+        )
 
-        if enabled == False and exp["enabled"].val == True and Systemd.is_enable_edge_case(service_name.val):
+        if (
+            enabled == False
+            and exp["enabled"].val == True
+            and Systemd.is_enable_edge_case(service_name.val)
+        ):
             # Consider the service enabled anyways
             # -> Edge case, see description in method
             print("Applied fix for edge case")
