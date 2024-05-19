@@ -9,7 +9,7 @@ from triac.types.target import Target
 class ServiceState(Enum):
     STARTED = "started"
     STOPPED = "stopped"
-    RESTARTED = "restarted",
+    RESTARTED = ("restarted",)
 
 
 class ServiceStateValue(BaseValue[ServiceState]):

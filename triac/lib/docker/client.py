@@ -2,9 +2,9 @@ import io
 import logging
 import os
 import tarfile
+import time
 from os import getcwd
 from os.path import dirname, join
-import time
 from typing import List
 
 import docker
@@ -86,7 +86,7 @@ class DockerClient:
 
     def commit_container_to_image(self, container: Container):
         image_repository = "triac"
-        # We need to give every intermediate image 
+        # We need to give every intermediate image
         # a different name. Otherwise, they will be overwritten
         # and then not properly removed during cleanup
         image_tag = f"intermediate-state-{int(time.time())}"

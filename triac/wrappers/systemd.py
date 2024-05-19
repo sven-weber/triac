@@ -37,6 +37,7 @@ systemd.service(
 )
 """
 
+
 class Systemd(Wrapper):
     def __init__(self) -> None:
         super().__init__()
@@ -72,12 +73,17 @@ class Systemd(Wrapper):
         return reached_status.enabled in ["enabled", "linked"]
 
     @staticmethod
-    def service_was_re_started(old_service: ServiceNameValue, reached_status: ServiceStatus):
+    def service_was_re_started(
+        old_service: ServiceNameValue, reached_status: ServiceStatus
+    ):
         if old_service.status.active_entered_tst < reached_status.active_entered_tst:
             # The service might not be running anymore but it has run since the last check
             # -> It was started
             return True
-        elif old_service.status.inactive_entered_tst < reached_status.inactive_entered_tst:
+        elif (
+            old_service.status.inactive_entered_tst
+            < reached_status.inactive_entered_tst
+        ):
             # The service went inactive again but it was started since the last check
             return True
         elif (
@@ -91,16 +97,16 @@ class Systemd(Wrapper):
             # after the check for some reason. Therefore, we check for any changes
             return True
         elif (
-                old_service.status.condition_res == False
-                and reached_status.condition_res == False
-            ):
-                # There is the weird behavior that systemd reports that it checked a condition
-                # via the systemctl status ... command
-                # But is does not update the timer. So in these cases where the condition
-                # was false before and it still is we just says the service was tried to be started
-                # since we have no other way of determining if the service was started or not
-                return True
-        
+            old_service.status.condition_res == False
+            and reached_status.condition_res == False
+        ):
+            # There is the weird behavior that systemd reports that it checked a condition
+            # via the systemctl status ... command
+            # But is does not update the timer. So in these cases where the condition
+            # was false before and it still is we just says the service was tried to be started
+            # since we have no other way of determining if the service was started or not
+            return True
+
         # Default
         return False
 
@@ -112,7 +118,9 @@ class Systemd(Wrapper):
     ) -> ServiceState:
         if target_state.val == ServiceState.STARTED:
             # If the service should have been started
-            if reached_status.active in ["active"] or Systemd.service_was_re_started(service, reached_status):
+            if reached_status.active in ["active"] or Systemd.service_was_re_started(
+                service, reached_status
+            ):
                 # The service is still running -> it was started
                 return ServiceState.STARTED
 
@@ -129,7 +137,7 @@ class Systemd(Wrapper):
         elif target_state.val == ServiceState.RESTARTED:
             if Systemd.service_was_re_started(service, reached_status):
                 return ServiceState.RESTARTED
-            
+
             # Otherwise return stopped
             return ServiceState.STOPPED
 

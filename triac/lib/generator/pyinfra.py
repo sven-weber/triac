@@ -1,6 +1,6 @@
 import logging
-from os.path import join
 import subprocess
+from os.path import join
 from typing import Container, List
 
 from triac.lib.generator.errors import PyInfraError
@@ -51,23 +51,18 @@ targets = [
         # Deploy script
         with open(self.__operations_path, "w+") as deploy_script:
             script = self.__deploy_script()
-            self.__logger.debug("Generated the following deployment script for pyinfra:")
+            self.__logger.debug(
+                "Generated the following deployment script for pyinfra:"
+            )
             self.__logger.debug(f"\n{script}")
             deploy_script.write(script)
 
     def __get_pyinfra_invocation(self) -> List[str]:
-        return [
-            "pyinfra",
-            self.__inventory_path,
-            self.__operations_path,
-            "--no-wait"
-        ]
+        return ["pyinfra", self.__inventory_path, self.__operations_path, "--no-wait"]
 
     def run(self) -> State:
         pyinfra = subprocess.run(
-            self.__get_pyinfra_invocation(),
-            capture_output=True,
-            text=True
+            self.__get_pyinfra_invocation(), capture_output=True, text=True
         )
 
         # Cleanup the temp files
@@ -80,12 +75,9 @@ targets = [
         if pyinfra.stderr != "":
             self.__logger.debug("Got the following stderr during pyinfra execution:")
             self.__logger.debug(pyinfra.stderr)
-        
+
         if pyinfra.returncode != 0:
             raise PyInfraError(pyinfra.returncode)
 
         # Fetch the reached state and return that
-        return self.__container.execute_method(
-            self.__wrapper, "verify", [self.__state]
-        )
-        
+        return self.__container.execute_method(self.__wrapper, "verify", [self.__state])

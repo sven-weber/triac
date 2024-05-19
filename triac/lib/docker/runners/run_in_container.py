@@ -2,10 +2,10 @@ import base64
 import io
 import os
 import pickle
+import re
 from contextlib import redirect_stderr, redirect_stdout
 from glob import glob
 from os.path import join
-import re
 from sys import argv
 
 from triac.lib.encoding import decode, encode

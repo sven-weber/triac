@@ -9,7 +9,7 @@ class ServiceStatus:
         active: str,
         condition_res: bool,
         active_entered_tst: int,
-        active_exit_tst : int,
+        active_exit_tst: int,
         inactive_entered_tst: int,
         inactive_exit_tst: int,
         condition_tst: int,
@@ -61,7 +61,7 @@ class ServiceStatus:
     @property
     def active_exit_tst(self) -> int:
         return self.__active_exit_tst
-    
+
     @property
     def inactive_entered_tst(self) -> int:
         return self.__inactive_entered_tst
@@ -69,7 +69,7 @@ class ServiceStatus:
     @property
     def inactive_exit_tst(self) -> int:
         return self.__inactive_exit_tst
-        
+
     @property
     def condition_res(self) -> bool:
         return self.__condition_res
@@ -111,5 +111,5 @@ class ServiceStatusFetcher:
             active_exit_tst,
             inactive_entered_tst,
             inactive_exit_tst,
-            condition_tst
+            condition_tst,
         )

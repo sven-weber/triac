@@ -33,7 +33,7 @@ class Execution:
         slow_mode: bool,
         unit: str,
         differential: str,
-        replay_wrappers: Wrappers = None
+        replay_wrappers: Wrappers = None,
     ) -> None:
         self.__fuzzer = Fuzzer()
         self.__user_preferred_base_image = user_preferred_base_image
@@ -114,7 +114,9 @@ class Execution:
         assert self.rounds_left() == True
 
         new_base = self.get_next_base_image()
-        self.__wrappers = Wrappers(new_base, self.__raw_unit, self.__raw_differential, [])
+        self.__wrappers = Wrappers(
+            new_base, self.__raw_unit, self.__raw_differential, []
+        )
         self.__round += 1
 
     def get_next_base_image(self) -> BaseImages:
@@ -125,10 +127,10 @@ class Execution:
             return self.__fuzzer.fuzz_base_image()
 
     def get_wrapper_by_name(self, name: str) -> Wrapper:
-        found = [elem for elem in filter(
-            lambda x: x.__name__ == name,
-            self.__available_wrappers
-        )]
+        found = [
+            elem
+            for elem in filter(lambda x: x.__name__ == name, self.__available_wrappers)
+        ]
 
         if len(found) == 1:
             return found[0]

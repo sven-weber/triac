@@ -21,7 +21,11 @@ class Identifier:
 
 class Wrappers:
     def __init__(
-        self, base_image: BaseImages, unit: str, differential: str,data: List[Tuple[Identifier, State]]
+        self,
+        base_image: BaseImages,
+        unit: str,
+        differential: str,
+        data: List[Tuple[Identifier, State]],
     ) -> None:
         self.__base_image = base_image
         self.__unit = unit
@@ -39,7 +43,7 @@ class Wrappers:
     @property
     def unit(self) -> str:
         return self.__unit
-    
+
     @property
     def differential(self) -> str:
         return self.__differential
@@ -66,7 +70,7 @@ class Wrappers:
         self.__data.append((identifier, state))
         self.__last_wrapper = wrapper
         return state
-    
+
     def append_with_state(self, wrapper: Wrapper, state: State) -> State:
         identifier = Identifier(wrapper)
         self.__data.append((identifier, state))

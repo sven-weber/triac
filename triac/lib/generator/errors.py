@@ -9,7 +9,8 @@ class AnsibleError(Exception):
 
     def event(self) -> Any:
         return self.__event
-    
+
+
 class PyInfraError(Exception):
     def __init__(self, exitcode: int) -> None:
         super().__init__(f"PyInfra exited with code {exitcode}")
