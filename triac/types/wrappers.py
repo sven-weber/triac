@@ -10,27 +10,22 @@ from triac.types.wrapper import State, Wrapper
 class Identifier:
     def __init__(self, obj: Wrapper) -> None:
         self.__obj = obj
-        cls = obj.__class__
-        self.__cls = cls.__qualname__
-        self.__mod = cls.__module__
-
-    @property
-    def mod(self) -> str:
-        return self.__mod
 
     def __repr__(self):
         return f"{self.__obj.__name__}"
 
     @property
-    def cls(self) -> str:
-        return self.__cls
+    def name(self) -> str:
+        return self.__obj.__name__
 
 
 class Wrappers:
     def __init__(
-        self, base_image: BaseImages, data: List[Tuple[Identifier, State]]
+        self, base_image: BaseImages, unit: str, differential: str,data: List[Tuple[Identifier, State]]
     ) -> None:
         self.__base_image = base_image
+        self.__unit = unit
+        self.__differential = differential
         self.__data = data
         self.__last_wrapper = None
         self.__has_error = False
@@ -40,6 +35,14 @@ class Wrappers:
 
     def encode(self) -> str:
         return encode(self)
+
+    @property
+    def unit(self) -> str:
+        return self.__unit
+    
+    @property
+    def differential(self) -> str:
+        return self.__differential
 
     @property
     def count(self) -> int:
@@ -63,9 +66,15 @@ class Wrappers:
         self.__data.append((identifier, state))
         self.__last_wrapper = wrapper
         return state
+    
+    def append_with_state(self, wrapper: Wrapper, state: State) -> State:
+        identifier = Identifier(wrapper)
+        self.__data.append((identifier, state))
+        self.__last_wrapper = wrapper
+        return state
 
     @property
-    def base_image(self) -> str:
+    def base_image(self) -> BaseImages:
         return self.__base_image
 
 

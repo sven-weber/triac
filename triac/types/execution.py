@@ -33,6 +33,7 @@ class Execution:
         slow_mode: bool,
         unit: str,
         differential: str,
+        replay_wrappers: Wrappers = None
     ) -> None:
         self.__fuzzer = Fuzzer()
         self.__user_preferred_base_image = user_preferred_base_image
@@ -43,16 +44,20 @@ class Execution:
         self.__ui_log_level = ui_log_level
         self.__continue_on_error = continue_on_error
         self.__slow_mode = slow_mode
+        self.__raw_unit = unit
         self.__unit = Target[unit] if unit != None else None
+        self.__raw_differential = differential
         self.__formatted_diff_target = differential
         diff_target = self.__parse_differential(differential)
         self.__first_differential = diff_target[0]
         self.__second_differential = diff_target[1]
+        self.__replay_wrappers = replay_wrappers
         self.__start_time = datetime.now()
         self.__used_docker_images = set()
+        self.__used_intermediate_docker_images = set()
         self.__round = 0
         self.__errors = 0
-        self.__wrappers = Wrappers(None, [])
+        self.__wrappers = Wrappers(None, unit, differential, [])
 
     def __parse_differential(self, differential) -> tuple[Target, Target]:
         if differential == None:
@@ -99,6 +104,9 @@ class Execution:
     def add_wrapper_to_round(self, wrapper: Wrapper, container: Container) -> State:
         return self.__wrappers.append(wrapper, container)
 
+    def add_wrapper_and_state_to_round(self, wrapper: Wrapper, state: State):
+        self.__wrappers.append_with_state(wrapper, state)
+
     def rounds_left(self) -> bool:
         return self.round < self.total_rounds
 
@@ -106,7 +114,7 @@ class Execution:
         assert self.rounds_left() == True
 
         new_base = self.get_next_base_image()
-        self.__wrappers = Wrappers(new_base, [])
+        self.__wrappers = Wrappers(new_base, self.__raw_unit, self.__raw_differential, [])
         self.__round += 1
 
     def get_next_base_image(self) -> BaseImages:
@@ -115,6 +123,17 @@ class Execution:
             return BaseImages[self.__user_preferred_base_image]
         else:
             return self.__fuzzer.fuzz_base_image()
+
+    def get_wrapper_by_name(self, name: str) -> Wrapper:
+        found = [elem for elem in filter(
+            lambda x: x.__name__ == name,
+            self.__available_wrappers
+        )]
+
+        if len(found) == 1:
+            return found[0]
+        else:
+            return None
 
     def get_next_wrapper(self, container: Container) -> Wrapper:
         last = self.__wrappers.get_last_wrapper()
@@ -167,9 +186,15 @@ class Execution:
     def add_image_to_used(self, img: str) -> None:
         self.__used_docker_images.add(img)
 
+    def add_intermediate_image_to_used(self, img: str) -> None:
+        self.__used_intermediate_docker_images.add(img)
+
     def set_error_for_round(self, target: State, actual: State):
         self.__errors += 1
         self.__wrappers.set_error_state(target, actual)
+
+    def reset_intermediate_images(self):
+        self.__used_intermediate_docker_images.clear()
 
     def encode_wrappers_for_round(self) -> str:
         return self.__wrappers.encode()
@@ -179,6 +204,10 @@ class Execution:
         if self.__unit != None:
             return ExecutionMode.UNIT
         return ExecutionMode.DIFFERENTIAL
+
+    @property
+    def replay_wrappers(self) -> Wrappers:
+        return self.__replay_wrappers
 
     @property
     def unit_target(self) -> Target:
@@ -205,7 +234,7 @@ class Execution:
         return self.__slow_mode
 
     @property
-    def base_image(self) -> str:
+    def base_image(self) -> BaseImages:
         return self.__wrappers.base_image
 
     @property
@@ -235,6 +264,10 @@ class Execution:
     @property
     def used_docker_images(self) -> Set[str]:
         return self.__used_docker_images
+
+    @property
+    def used_intermediate_images(self) -> Set[str]:
+        return self.__used_intermediate_docker_images
 
     @property
     def log_level(self) -> str:

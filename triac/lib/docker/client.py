@@ -4,6 +4,7 @@ import os
 import tarfile
 from os import getcwd
 from os.path import dirname, join
+import time
 from typing import List
 
 import docker
@@ -85,7 +86,10 @@ class DockerClient:
 
     def commit_container_to_image(self, container: Container):
         image_repository = "triac"
-        image_tag = "intermediate-state"
+        # We need to give every intermediate image 
+        # a different name. Otherwise, they will be overwritten
+        # and then not properly removed during cleanup
+        image_tag = f"intermediate-state-{int(time.time())}"
         container.base_obj.commit(
             repository=image_repository, author="triac", tag=image_tag
         )

@@ -66,7 +66,7 @@ class Systemd(Wrapper):
 
     @staticmethod
     def enabled() -> bool:
-        return False
+        return True
 
     @staticmethod
     def determine_enabled(reached_status: ServiceStatus) -> bool:

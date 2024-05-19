@@ -4,7 +4,7 @@ import sys
 import time
 from asyncio import Event
 from threading import Thread
-from typing import Container, Dict, List
+from typing import Container, Dict, List, Set
 
 import click
 from art import text2art
@@ -25,7 +25,9 @@ from triac.types.errors import (
 from triac.types.execution import Execution, ExecutionMode
 from triac.types.target import Target
 from triac.types.wrapper import State, Wrapper
+from triac.types.wrappers import Wrappers, load
 from triac.ui.cli_layout import CLILayout
+from triac.wrappers.systemd import Systemd
 
 
 def build_base_image(
@@ -189,35 +191,16 @@ def exec_fuzzing_round(
         target_state = execution.add_wrapper_to_round(wrapper, container)
         raise_when_stop_event_set(stop_event)
 
-        if execution.mode == ExecutionMode.UNIT:
-            # Unit test
-            exec_unit_test_with_wrapper(
-                execution.unit_target,
-                target_state,
-                container,
-                wrapper,
-                logger,
-                stop_event,
-            )
-            logger.info(f"Target state reached, wrapper finished")
-        else:
-            # Differential test
-            exec_differential_test_with_wrapper(
-                execution,
-                target_state,
-                container,
-                wrapper,
-                logger,
-                stop_event,
-                docker,
-                image,
-                containers,
-            )
-            logger.info("Target state reached by all targets, wrapper finished")
-
-        # Commit container for next round
-        image = docker.commit_container_to_image(container)
-        execution.add_image_to_used(image)
+        execute_wrapper(
+           execution,
+           docker,
+           target_state,
+           container,
+           containers,
+           wrapper,
+           logger,
+           stop_event
+       )
 
         # Check slow mode
         check_slow_mode(execution, logger)
@@ -236,6 +219,10 @@ def remove_containers(docker: DockerClient, containers: List[Container]):
         docker.remove_container(container)
     containers.clear()
 
+def cleanup_images(docker: DockerClient, logger: logging.Logger, images: List[str]):
+    for image in images:
+        logger.debug(f"Removing image {image}")
+        docker.remove_image(image)
 
 def perform_cleanup(execution: Execution, logger: logging.Logger, docker: DockerClient):
     logger.info("Cleaning up resources")
@@ -246,10 +233,155 @@ def perform_cleanup(execution: Execution, logger: logging.Logger, docker: Docker
         or not execution.keep_base_images,
         execution.used_docker_images,
     )
-    for image in to_remove:
-        logger.debug(f"Removing image {image}")
-        docker.remove_image(image)
+    cleanup_images(docker, logger, to_remove)
 
+def get_execution_for_replay(
+        replay_file: str,
+        keep_base_images: bool,
+        log_level: str,
+        ui_log_level: str,
+) -> Execution:
+    # Parse replay file
+    try:
+        to_replay = load(replay_file)
+    except Exception as e:
+        print(
+            "Error: Could not parse the provided replay file",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    return Execution(
+        to_replay.base_image.name,
+        keep_base_images,
+        1,
+        to_replay.count,
+        log_level,
+        ui_log_level,
+        False,
+        False,
+        to_replay.unit,
+        to_replay.differential,
+        replay_wrappers=to_replay
+    )
+
+def execute_wrapper(
+        execution: Execution,
+        docker: DockerClient,
+        target_state: State,
+        container: Container,
+        containers: List[Container],
+        wrapper: Wrapper,
+        logger: logging.Logger,
+        stop_event = Event
+):
+    if execution.mode == ExecutionMode.UNIT:
+        # Unit test
+        exec_unit_test_with_wrapper(
+            execution.unit_target,
+            target_state,
+            container,
+            wrapper,
+            logger,
+            stop_event,
+        )
+        logger.info(f"Target state reached, wrapper finished")
+    else:
+        # Differential test
+        exec_differential_test_with_wrapper(
+            execution,
+            target_state,
+            container,
+            wrapper,
+            logger,
+            stop_event,
+            docker,
+            image,
+            containers,
+        )
+        logger.info("Target state reached by all targets, wrapper finished")
+
+    # Commit container for next round
+    image = docker.commit_container_to_image(container)
+    execution.add_intermediate_image_to_used(image)
+
+def exec_replay(execution: Execution, stop_event: Event):
+    logger = logging.getLogger(__name__)
+    image_cache = {}
+    containers : List[Container] = []
+    print_debug_header(logger)
+
+    execution.start_new_round()
+    logger.info(
+        f"***** Starting replay on image {execution.base_image.name} *****"
+    )
+
+    try:
+        # Initialize docker client
+        docker = DockerClient()
+
+        # Build base image
+        image = build_base_image(docker, execution, image_cache)
+        raise_when_stop_event_set(stop_event)
+
+        # Replace the wrappers wrappers
+        for identifier, target_state in execution.replay_wrappers.target_states:
+            raise_when_stop_event_set(stop_event)
+            logger.info(f"---- Executing wrapper #{execution.num_wrappers_in_round + 1}")
+            
+            container = create_container_for_image(docker, image, containers)
+            raise_when_stop_event_set(stop_event)
+
+            # Instantiate wrapper
+            wrapper = execution.get_wrapper_by_name(identifier.name)
+            if wrapper == None:
+                raise Exception(f"No wrapper with the name {identifier.name} could be found for replay")
+            execution.add_wrapper_and_state_to_round(wrapper, target_state)
+            raise_when_stop_event_set(stop_event)
+
+            execute_wrapper(
+                execution,
+                docker,
+                target_state,
+                container,
+                containers,
+                wrapper,
+                logger,
+                stop_event
+            )
+
+            logger.info("Press Enter to continue with next wrapper...")
+            time.sleep(2)  # Hacky UI Update
+            input()
+
+            # Remove containers
+            remove_containers(docker, containers)
+    except ExecutionShouldStopRequestedError as e:
+        # Do nothing, the method failed because the execution should stop
+        pass
+    except StateMismatchError as e:
+        logger.error("Found mismatch between target and actual state")
+        logger.error("Target state:")
+        logger.error(e.target)
+        logger.error("Actual state:")
+        logger.error(e.actual)
+        execution.set_error_for_round(e.target, e.actual)
+        
+        logger.info("Press Enter to finish execution")
+        time.sleep(2)  # Hacky UI Update
+        input()
+    except Exception as e:
+        logger.error("Encountered unexpected error during replay:")
+        logger.exception(e)
+        return
+    finally:
+        # Remove containers
+        remove_containers(docker, containers)
+        # Cleanup all intermediate images
+        cleanup_images(docker, logger, execution.used_intermediate_images)
+        execution.reset_intermediate_images()
+        # Cleanup the base images
+        perform_cleanup(execution, logger, docker)
 
 def exec_fuzzing(execution: Execution, stop_event: Event):
     logger = logging.getLogger(__name__)
@@ -292,7 +424,11 @@ def exec_fuzzing(execution: Execution, stop_event: Event):
                 else:
                     logger.error("Executing next round")
         finally:
+            # Remove container that have not been removed
             remove_containers(docker, containers)
+            # Cleanup all intermediate images
+            cleanup_images(docker, logger, execution.used_intermediate_images)
+            execution.reset_intermediate_images()
 
     if stop_event.is_set() == False:
         logger.info("All rounds executed")
@@ -319,16 +455,22 @@ def get_differential_options() -> List[str]:
     return results
 
 
-def validate_options(unit: Target, differential: str):
+def validate_options(unit: Target, differential: str, replay: str):
     if unit != None and differential != None:
         print(
             "Error: You cannot enable differential and unit testing at the same time",
             file=sys.stderr,
         )
         sys.exit(1)
-    elif unit == None and differential == None:
+    elif unit == None and differential == None and replay == None:
         print(
-            "Error: You have to enable either unit or differential testing",
+            "Error: You have to enable either unit or differential testing or a replay session",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    elif replay != None and replay.endswith(".triac") == False:
+        print(
+            "Error: If you want to replay an error, please supply a '.triac' file",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -407,6 +549,17 @@ def validate_options(unit: Target, differential: str):
     help="Enables differential testing between two tools. The tools have to be specified using one of the provided format options.",
     type=click.Choice(get_differential_options()),
 )
+@click.option(
+    "--replay",
+    help="This enables a replay. In this mode, TRIaC DOES NOT FUZZ but replays a previously found error from the /errors folder. When this option is supplied, only the log levels will be taken into account.",
+    type=click.Path(
+        exists=True,
+        dir_okay=False,
+        file_okay=True,
+        readable=True,
+        resolve_path=True
+    )
+)
 def fuzz(
     rounds,
     wrappers_per_round,
@@ -418,25 +571,34 @@ def fuzz(
     slow_mode,
     unit,
     differential,
+    replay
 ):
-    """Start a TRIaC fuzzing session"""
-    validate_options(unit, differential)
+    """Start a TRIaC fuzzing or replay session"""
+    validate_options(unit, differential, replay)
 
-    # Generate execution
-    state = Execution(
-        base_image,
-        keep_base_images,
-        rounds,
-        wrappers_per_round,
-        log_level,
-        ui_log_level,
-        continue_on_error,
-        slow_mode,
-        unit,
-        differential,
-    )
-
-    # TODO: Enable replay
+    if replay != None:
+        state = get_execution_for_replay(
+            replay,
+            keep_base_images,
+            log_level,
+            ui_log_level
+        )
+        thread_target = exec_replay
+    else:
+        # Generate execution
+        state = Execution(
+            base_image,
+            keep_base_images,
+            rounds,
+            wrappers_per_round,
+            log_level,
+            ui_log_level,
+            continue_on_error,
+            slow_mode,
+            unit,
+            differential
+        )
+        thread_target = exec_fuzzing
 
     # Stop events
     ui_stop = Event()
@@ -455,9 +617,9 @@ def fuzz(
 
     # Load the wrappers
     state.load_list_of_wrapper_classes()
-
+    
     # Start the threads to display the UI and computation
-    fuzz_worker = Thread(target=exec_fuzzing, args=(state, fuzz_stop))
+    fuzz_worker = Thread(target=thread_target, args=(state, fuzz_stop))
     ui_worker = Thread(
         target=ui.render_ui,
         args=(
@@ -477,5 +639,4 @@ def fuzz(
 
 if __name__ == "__main__":
     fuzz()
-    # TODO: Enable replay
     sys.exit(0)
