@@ -27,10 +27,11 @@ class PostgresDbStateValue(BaseValue):
 
 
 class PostgresDbStateType(BaseType):
-    def __init__(self) -> None:
+    def __init__(self, can_delete: bool) -> None:
         super().__init__()
+        self.can_delete = can_delete
 
     def generate(self) -> PostgresDbStateValue:
         return PostgresDbStateValue(
-            choice([PostgresDbState.PRESENT, PostgresDbState.ABSENT])
+            choice([PostgresDbState.PRESENT, PostgresDbState.ABSENT] if self.can_delete else [PostgresDbState.PRESENT])
         )

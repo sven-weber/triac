@@ -10,15 +10,14 @@ from typing import List, cast
 from triac.types.errors import UnsupportedTargetWrapperError
 from triac.types.target import Target
 from triac.types.wrapper import Definition, State, Wrapper
-from triac.values.postgres_uri import PostgresURIType
-from triac.values.postgres_db_state import PostgresDbStateType
-from triac.values.postgres_db_name import PostgresDbNameType
+from triac.values.postgres_uri import PostgresConnectionParameters, PostgresURIType
+from triac.values.postgres_db import PostgresDbType, PostgresDbValue
+from triac.values.postgres_db_state import PostgresDbStateValue, PostgresDbState
 from triac.values.postgres_uri import DEFAULT_CHECK_URI
 
 ANSIBLE_TEMPLATE = """community.postgresql.postgresql_db:
-  name: {name}
   {uri}
-  state: {state}
+  {db}
 """
 
 
@@ -29,9 +28,8 @@ class PostgresDb(Wrapper):
     @staticmethod
     def definition() -> Definition:
         return {
-            "name": PostgresDbNameType(),
             "uri": PostgresURIType(),
-            "state": PostgresDbStateType(),
+            "db": PostgresDbType(),
         }
 
     @staticmethod
@@ -64,6 +62,17 @@ class PostgresDb(Wrapper):
 
     @staticmethod
     def verify(exp: State) -> State:
-        state = {}
+        state = exp
+        db = cast(PostgresDbValue, exp["db"])
+        name = db.val.val
+        params = cast(PostgresConnectionParameters, exp["uri"].val)
+        cur = __import__("psycopg2").connect(params.uri).cursor()
+        cur.execute("SELECT datname FROM pg_database")
+        dbs =  list([row[0] for row in cur.fetchall()])
+        if name in dbs:
+            db.state = PostgresDbStateValue(PostgresDbState.PRESENT)
+        else:
+            db.state = PostgresDbStateValue(PostgresDbState.PRESENT)
 
+        state["db"] = db
         return state

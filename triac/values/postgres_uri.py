@@ -10,6 +10,13 @@ class PostgresConnectionParameters:
         self.user = user
         self.password = password
 
+    @property
+    def uri(self) -> str:
+        return f"host={self.host} user={self.user} password={self.password}"
+
+    def __repr__(self):
+        return f"[host] {self.host} [user] {self.user} [password] {self.password}"
+
 
 class PostgresURIValue(BaseValue):
     def __init__(self, val: PostgresConnectionParameters) -> None:
