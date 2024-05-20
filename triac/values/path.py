@@ -22,7 +22,7 @@ DESCENT_FACTOR = 1.5
 BACKTRACK_FACTOR = 2
 IGNORE_PATHS = f"^/(tmp|proc|mnt|run|dev|lib\\w*|sys|{TRIAC_WORKING_DIR}|\\.socket$)"
 IGNORE_PATHS_DELETE = (
-    f"^/(etc$|etc/hostname$|sbin|usr/sbin|usr/lib.*|boot|bin|usr/bin|root/.ssh$)"
+    f"^/(etc$|etc/hostname$|sbin|usr/sbin|usr/app/triac|usr/lib.*|boot|bin|usr/bin|root/.ssh$)"
 )
 
 
