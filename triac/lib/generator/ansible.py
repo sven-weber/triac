@@ -2,7 +2,7 @@ import logging
 from os.path import join
 from pprint import pformat
 
-from ansible_runner import run_async as ansible_run
+import ansible_runner
 
 from triac.lib.docker.types.container import Container
 from triac.lib.generator.errors import AnsibleError
@@ -71,7 +71,8 @@ all:
         pass
 
     def run(self) -> State:
-        _, runner = ansible_run(
+        # Run synchronous
+        runner = ansible_runner.run(
             inventory=self.__inventory_path, playbook=self.__playbook_path, quiet=True
         )
 
@@ -91,8 +92,8 @@ all:
 
         # Cleanup the temp files
         self.destroy()
-
-        state = self.__container.execute_method(
+    
+        # Fetch the reached state and return
+        return self.__container.execute_method(
             self.__wrapper, "verify", [self.__state]
         )
-        return state

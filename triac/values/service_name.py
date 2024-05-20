@@ -62,12 +62,13 @@ class ServiceNameType(BaseType):
         units = self.__get_units_with_status(systemd)
 
         # Filter the units to only contain services
-        # without parameters (those without @, otherwise it is unclear
-        # how those services should be addressed)
+        # without parameters (those without @, otherwise it is unclear how those services should be addressed)
+        # None of the getty services (These are disabled inside containers for a reason)
         services = [
             elem
             for elem in filter(
-                lambda x: x[0].endswith(".service") and "@" not in x[0], units
+                lambda x: x[0].endswith(".service") and "@" not in x[0] and "getty" not in x[0],
+                units
             )
         ]
 

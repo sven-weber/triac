@@ -66,7 +66,7 @@ class Systemd(Wrapper):
 
     @staticmethod
     def enabled() -> bool:
-        return False
+        return True
 
     @staticmethod
     def determine_enabled(reached_status: ServiceStatus) -> bool:
@@ -76,13 +76,13 @@ class Systemd(Wrapper):
     def service_was_re_started(
         old_service: ServiceNameValue, reached_status: ServiceStatus
     ):
-        if old_service.status.active_entered_tst < reached_status.active_entered_tst:
+        if old_service.status.active_entered_tst != reached_status.active_entered_tst:
             # The service might not be running anymore but it has run since the last check
             # -> It was started
             return True
         elif (
             old_service.status.inactive_entered_tst
-            < reached_status.inactive_entered_tst
+            != reached_status.inactive_entered_tst
         ):
             # The service went inactive again but it was started since the last check
             return True

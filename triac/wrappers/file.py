@@ -33,18 +33,6 @@ ANSIBLE_TEMPLATE_LINK = """ansible.builtin.file:
   mode: {mode}
 """
 
-PYINFRA_TEMPLATE = """from pyinfra.operations import files
-
-files.file(
-    {path},
-    present={present},
-    user={owner},
-    group={group},
-    mode={mode},
-)
-"""
-
-
 class File(Wrapper):
     def __init__(self) -> None:
         super().__init__()
@@ -76,21 +64,16 @@ class File(Wrapper):
                 return ANSIBLE_TEMPLATE_LINK.format(**s)
             else:
                 return ANSIBLE_TEMPLATE_NORMAL.format(**s)
-        elif target == Target.PYINFRA:
-            s["present"] = BoolValue(psv.state != PathState.ABSENT).transform(
-                Target.PYINFRA
-            )
-            return PYINFRA_TEMPLATE.format(**s)
         else:
             raise UnsupportedTargetWrapperError(target, File.__name__)
 
     @staticmethod
     def supported_targets() -> List[Target]:
-        return [Target.ANSIBLE, Target.PYINFRA]
+        return [Target.ANSIBLE]
 
     @staticmethod
     def enabled() -> bool:
-        return False
+        return True
 
     @staticmethod
     def verify(exp: State) -> State:
