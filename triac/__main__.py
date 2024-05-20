@@ -551,7 +551,7 @@ def validate_options(unit: Target, differential: str, replay: str):
 @click.option(
     "--unit",
     "-U",
-    help="Enables unit testing a specific tool. By default, Ansible wll be tested. This option cannot be supplied while performing differential testing.",
+    help="Enables unit testing the specified tool. This option cannot be supplied while performing differential testing.",
     type=click.Choice([val.name for val in Target]),
 )
 @click.option(
@@ -562,7 +562,7 @@ def validate_options(unit: Target, differential: str, replay: str):
 )
 @click.option(
     "--replay",
-    help="This enables a replay. In this mode, TRIaC DOES NOT FUZZ but replays a previously found error from the /errors folder. When this option is supplied, only the log levels will be taken into account.",
+    help="This enables a replay. In this mode, TRIaC DOES NOT FUZZ but replays a previously found error from the /errors folder. When this option is supplied, only the log levels and keep-base-images options will be taken into account.",
     type=click.Path(
         exists=True, dir_okay=False, file_okay=True, readable=True, resolve_path=True
     ),
