@@ -13,8 +13,6 @@ Further TRIaC supports the following [pyinfra](https://pyinfra.com/) operations:
 
 - [Systemd](https://docs.pyinfra.com/en/2.x/operations/systemd.html)
 
-TODO: Resize
-
 ![Image](/img/example.png "Screenshot of a TRIaC run")
 
 This readme provides instructions on how to use TRIaC to perform fuzzing. Instructions on how to extend the tool with new capabilities to cover more tools or modules can be found in the [triac/wrappers subfolder](/triac/wrappers/Readme.md). Moreover, the experimental results, raw data, and instructions on how to replicate the experiments can be found at [experiments](/experiments/Readme.d).
