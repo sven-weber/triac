@@ -11,7 +11,7 @@ from triac.values.path import FileType, PathType, PathValue
 class PathState(Enum):
     FILE = "file"
     DIRECTORY = "directory"
-    SYMLINK = "link"  # TODO: Check pyinfra
+    SYMLINK = "link"
     ABSENT = "absent"
 
     def transform(self, target: Target) -> str:
