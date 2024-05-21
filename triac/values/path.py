@@ -102,7 +102,11 @@ def stochastic_walk(
                     and (not empty or len(listdir(abs)) == 0)
                 ]
             elif file_type == FileType.FILE:
-                lst = files
+                lst = [
+                    file
+                    for (file, abs) in map(lambda p: (p, join(root, p)), files)
+                    if not islink(abs)
+                ]
             else:
                 assert False
 
