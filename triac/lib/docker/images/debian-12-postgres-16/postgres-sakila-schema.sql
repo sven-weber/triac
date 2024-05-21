@@ -1,4 +1,11 @@
 --
+-- Create database
+--
+CREATE DATABASE triac;
+-- Connect to the created DB
+\c triac
+
+--
 -- PostgreSQL database dump
 --
 

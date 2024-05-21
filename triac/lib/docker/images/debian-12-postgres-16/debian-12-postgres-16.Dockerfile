@@ -49,6 +49,12 @@ ENV POSTGRES_PASSWORD postgres
 ENV POSTGRES_USER postgres
 ENV POSTGRES_DB postgres
 
+# Overwrite the default data location
+# (which is a volume otherwise)
+# -> Will not be persistet between rounds
+ENV PGDATA /postgres-data
+RUN mkdir /postgres-data
+
 # Copy the example database
 COPY ./triac/lib/docker/images/debian-12-postgres-16/postgres-sakila-schema.sql docker-entrypoint-initdb.d
 
@@ -56,6 +62,5 @@ COPY ./triac/lib/docker/images/debian-12-postgres-16/postgres-sakila-schema.sql 
 COPY ./triac/lib/docker/images/debian-12-postgres-16/postgres.service /etc/systemd/system/
 COPY ./triac/lib/docker/images/debian-12-postgres-16/start-postgres.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start-postgres.sh && systemctl enable postgres
-
 
 ENTRYPOINT ["/lib/systemd/systemd"]

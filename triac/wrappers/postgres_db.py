@@ -72,7 +72,7 @@ class PostgresDb(Wrapper):
         if name in dbs:
             db.state = PostgresDbStateValue(PostgresDbState.PRESENT)
         else:
-            db.state = PostgresDbStateValue(PostgresDbState.PRESENT)
+            db.state = PostgresDbStateValue(PostgresDbState.ABSENT)
 
         state["db"] = db
         return state

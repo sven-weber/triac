@@ -191,7 +191,7 @@ def exec_fuzzing_round(
         target_state = execution.add_wrapper_to_round(wrapper, container)
         raise_when_stop_event_set(stop_event)
 
-        execute_wrapper(
+        image = execute_wrapper(
             execution,
             docker,
             target_state,
@@ -310,6 +310,7 @@ def execute_wrapper(
     # Commit container for next round
     image = docker.commit_container_to_image(container)
     execution.add_intermediate_image_to_used(image)
+    return image
 
 
 def exec_replay(execution: Execution, stop_event: Event):
@@ -348,7 +349,7 @@ def exec_replay(execution: Execution, stop_event: Event):
             execution.add_wrapper_and_state_to_round(wrapper, target_state)
             raise_when_stop_event_set(stop_event)
 
-            execute_wrapper(
+            image = execute_wrapper(
                 execution,
                 docker,
                 target_state,
