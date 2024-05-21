@@ -43,9 +43,9 @@ class PostgresDb(Wrapper):
 
     @staticmethod
     def can_execute() -> bool:
-        for i in range(10):
+        for i in range(600):
             try:
-                sleep(0.1 * i**2)
+                sleep(0.1)
                 __import__("psycopg2").connect(DEFAULT_CHECK_URI)
                 return True
             except:
