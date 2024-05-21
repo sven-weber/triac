@@ -26,7 +26,7 @@ share/python-wheels/
 MANIFEST
 
 # Tool generated content
-errors/
+/errors/
 /triac.log
 
 # PyInstaller

@@ -18,7 +18,7 @@ def enabled() -> bool:
 Afterward, execute the following command:
 
 ```console
-python3 -m triac --unit ANSIBLE --continue-on-error --keep-base-images --rounds 80 --wrappers-per-round 10 -B DEBIAN12_POSTGRES16
+python3 -m triac --unit ANSIBLE --continue-on-error --keep-base-images --rounds 100 --wrappers-per-round 10
 ```
 
 This will execute the experiment. We expect this to take rouhly 3 hours.

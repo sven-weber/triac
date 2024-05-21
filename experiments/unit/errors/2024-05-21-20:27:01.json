@@ -1,0 +1,112 @@
+{
+    "target": "{'path': [link] [dst] /usr/local/share/fonts [src] /bin, 'owner': [name]: irc [uid]: 39, 'group': [name]: disk, [gid]: 6, 'mode': u: r-- g: r-- o: rw-}\n",
+    "actual": "{'path': [link] [dst] /usr/local/share/fonts [src] /bin, 'owner': [name]: root [uid]: 0, 'group': [name]: root, [gid]: 0, 'mode': u: rwx g: rwx o: rwx}\n",
+    "changes": {
+        "values_changed": {
+            "root['owner'].val._User__name": {
+                "new_value": "root",
+                "old_value": "irc"
+            },
+            "root['owner'].val._User__uid": {
+                "new_value": 0,
+                "old_value": 39
+            },
+            "root['owner'].val._User__gid": {
+                "new_value": 0,
+                "old_value": 39
+            },
+            "root['owner'].val._User__home": {
+                "new_value": "/root",
+                "old_value": "/run/ircd"
+            },
+            "root['owner'].val._User__shell": {
+                "new_value": "/bin/bash",
+                "old_value": "/usr/sbin/nologin"
+            },
+            "root['owner'].val.gid": {
+                "new_value": 0,
+                "old_value": 39
+            },
+            "root['owner'].val.home": {
+                "new_value": "/root",
+                "old_value": "/run/ircd"
+            },
+            "root['owner'].val.name": {
+                "new_value": "root",
+                "old_value": "irc"
+            },
+            "root['owner'].val.shell": {
+                "new_value": "/bin/bash",
+                "old_value": "/usr/sbin/nologin"
+            },
+            "root['owner'].val.uid": {
+                "new_value": 0,
+                "old_value": 39
+            },
+            "root['group'].val._Group__name": {
+                "new_value": "root",
+                "old_value": "disk"
+            },
+            "root['group'].val._Group__gid": {
+                "new_value": 0,
+                "old_value": 6
+            },
+            "root['group'].val.gid": {
+                "new_value": 0,
+                "old_value": 6
+            },
+            "root['group'].val.name": {
+                "new_value": "root",
+                "old_value": "disk"
+            },
+            "root['mode'].val._Mode__user.name": {
+                "new_value": "XWR",
+                "old_value": "R"
+            },
+            "root['mode'].val._Mode__user.value": {
+                "new_value": 7,
+                "old_value": 4
+            },
+            "root['mode'].val._Mode__group.name": {
+                "new_value": "XWR",
+                "old_value": "R"
+            },
+            "root['mode'].val._Mode__group.value": {
+                "new_value": 7,
+                "old_value": 4
+            },
+            "root['mode'].val._Mode__others.name": {
+                "new_value": "XWR",
+                "old_value": "RW"
+            },
+            "root['mode'].val._Mode__others.value": {
+                "new_value": 7,
+                "old_value": 6
+            },
+            "root['mode'].val.group.name": {
+                "new_value": "XWR",
+                "old_value": "R"
+            },
+            "root['mode'].val.group.value": {
+                "new_value": 7,
+                "old_value": 4
+            },
+            "root['mode'].val.others.name": {
+                "new_value": "XWR",
+                "old_value": "RW"
+            },
+            "root['mode'].val.others.value": {
+                "new_value": 7,
+                "old_value": 6
+            },
+            "root['mode'].val.user.name": {
+                "new_value": "XWR",
+                "old_value": "R"
+            },
+            "root['mode'].val.user.value": {
+                "new_value": 7,
+                "old_value": 4
+            }
+        }
+    }
+}

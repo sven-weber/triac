@@ -1,0 +1,24 @@
+{
+    "target": "{'path': [directory] /bin, 'owner': [name]: list [uid]: 38, 'group': [name]: cdrom, [gid]: 24, 'mode': u: r-x g: rwx o: r--}\n",
+    "actual": "{'path': [absent] /bin, 'owner': [name]: list [uid]: 38, 'group': [name]: cdrom, [gid]: 24, 'mode': u: r-x g: rwx o: r--}\n",
+    "changes": {
+        "values_changed": {
+            "root['path']._PathStateValue__state.name": {
+                "new_value": "ABSENT",
+                "old_value": "DIRECTORY"
+            },
+            "root['path']._PathStateValue__state.value": {
+                "new_value": "absent",
+                "old_value": "directory"
+            },
+            "root['path'].state.name": {
+                "new_value": "ABSENT",
+                "old_value": "DIRECTORY"
+            },
+            "root['path'].state.value": {
+                "new_value": "absent",
+                "old_value": "directory"
+            }
+        }
+    }
+}
