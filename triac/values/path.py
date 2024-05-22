@@ -100,6 +100,8 @@ def stochastic_walk(
                     if (not deletable or not match(IGNORE_PATHS_DELETE, abs))
                     # empty ==> len(listdir(abs)) == 0
                     and (not empty or len(listdir(abs)) == 0)
+                    # ignore links
+                    and not islink(abs)
                 ]
             elif file_type == FileType.FILE:
                 lst = [

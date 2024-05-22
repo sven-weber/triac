@@ -85,7 +85,10 @@ class File(Wrapper):
             opt = None
             if islink(path):
                 ps = PathState.SYMLINK
-                opt = readlink(path)
+                opt = path
+                # recursively follow the link
+                while islink(opt):
+                    opt = readlink(opt)
             elif isdir(path):
                 ps = PathState.DIRECTORY
             st = lstat(path if opt is None else opt)
