@@ -28,6 +28,4 @@ Our execution took 1 hour, 28 minutes and 23 seconds. Below is a screenshot of t
 
 You can find the whole execution log, including all details in the ```triac.log``` file in this folder.
 
-In total, we uncovered 6 errors.
-
-TODO: describe errors
+In total, we uncovered 6 errors. All of those errors where due to errors in our wrapper implementation that have been fixed since then. You can see our report for details on the kind of errors we encountered.
