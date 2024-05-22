@@ -197,4 +197,9 @@ To replay an error, execute the following:
 python3 -m triac --replay ./errors/{FILENAME}.triac
 ```
 
-with the name of the file that you want to replay. TRIaC will then enter a replay mode where each of the wrappers needed to get to the discovered error will be executed with the exact same target states as defined when the error was discovered originally. Moreover, the user has to acknowledge the execution before the next wrapper will be executed. In this state, the container(s) against which the wrapper was executed will still exist. Therefore, you as a user can investigate the reached state within the actual target system step-by-step. Once you acknowledge the execution of the next wrapper, the container(s) from the previous wrapper will be removed.
+with the name of the file that you want to replay.
+
+TRIaC will then enter a replay mode where each of the wrappers needed to get to the discovered error will be executed with the exact same target states as defined when the error was discovered originally. Moreover, the user has to acknowledge the execution before and after any wrapper will be executed. This means, the the container against the wrapper will be executed does exist before and after the wrapper execution. Therefore, you as a user can investigate the system state within the actual target system step-by-step before and after each execution. Once you acknowledge the execution of the next wrapper, the container(s) from the previous wrapper will be removed.
+
+> [!WARNING]  
+> It can be that during replay the execution of tools like Ansible fails, although this was not the case in the original execution. There can be a number of reasons for this. For example, the execution might have used temporary files that do not exist on this new instantiation of the container. Therefore, some manual intervention might be required during the replay to get to the actual wrapper that produces the state mismatch. That is one of the reason why the execution waits for user input before and after each wrapper execution.

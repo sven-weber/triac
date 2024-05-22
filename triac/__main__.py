@@ -349,6 +349,10 @@ def exec_replay(execution: Execution, stop_event: Event):
             execution.add_wrapper_and_state_to_round(wrapper, target_state)
             raise_when_stop_event_set(stop_event)
 
+            logger.info("Press Enter to continue the execute the wrapper...")
+            time.sleep(2)  # Hacky UI Update
+            input()
+
             image = execute_wrapper(
                 execution,
                 docker,
