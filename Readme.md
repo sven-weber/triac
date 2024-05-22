@@ -1,5 +1,7 @@
 ## TRIaC: A generaTion-based fuzzing framework for Resilience in Infrastructure as Code
 
+[![DOI](https://zenodo.org/badge/778264471.svg)](https://zenodo.org/badge/latestdoi/778264471)
+
 This repository contains the supplementary material for TRiAC, a tool for generation-based fuzzing that enables unit and differential testing of IaC tools. TRIaC achieves this through the use of Docker and so-called Wrappers that enable the testing of specific modules. TRIaC has been developed by [Luca Tagliavini](https://github.com/lucat1) and [Sven Weber](https://github.com/sven-weber) as part of a course on [Automated Software Testing](https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/lerneinheit.view?semkez=2024S&lerneinheitId=177483&lang=en) held by [Prof. Dr. Zhendong Su](https://people.inf.ethz.ch/suz/) at [ETH Zurich](https://inf.ethz.ch/).
 
 
