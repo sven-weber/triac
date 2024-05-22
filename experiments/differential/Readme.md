@@ -4,7 +4,7 @@ This experiment tests the differential testing capabilities of TRIaC by running 
 
 ## Repeat the experiment
 
-The repeat the experiment, first you need to manually disable all but the ```Systemd``` wrapper. For this, navigate to the [/triac/wrappers](/triac/wrappers) folder. For each of the wrappers, **that is not systemd.py**, change the ```enabled``` function to return ```False```like so:
+To repeat the experiment, first you need to manually disable all but the ```Systemd``` wrapper. For this, navigate to the [/triac/wrappers](/triac/wrappers) folder. For each of the wrappers, **that is not systemd.py**, change the ```enabled``` function to return ```False``` slike so:
 
 ```python
 @staticmethod
@@ -18,7 +18,7 @@ Afterward, execute the following command:
 python3 -m triac --differential ANSIBLE:PYINFRA --continue-on-error --keep-base-images --rounds 100 --wrappers-per-round 10
 ```
 
-This will execute the experiment. We expect this to take rouhly 3 hours.
+This will execute the experiment. We expect this to take roughly 3 hours.
 
 ## Results
 

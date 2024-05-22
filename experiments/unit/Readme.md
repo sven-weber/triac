@@ -1,13 +1,10 @@
 ## Unit testing
 
-
-TODO: Update
-
-This experiment tests the generability of TRIaC by running a more complex setup using the [community.postgresql.postgresql_db](https://docs.ansible.com/ansible/latest/collections/community/general/postgresql_db_module.html) module. The experiment was run for 200 round a 10 wrappers each. Therefore, there are 2000 wrapper executions in total.
+This experiment tests the unit testing capabilities of TRIaC by running both Ansible using the [builtin.file](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html) module. The experiment was run for 100 round a 10 wrappers each for a total of 1000 executed wrappers.
 
 ## Repeat the experiment
 
-The repeat the experiment, first you need to manually disable all but the ```PostgresDB``` wrapper. For this, navigate to the [/triac/wrappers](/triac/wrappers) folder. For each of the wrappers, **that is not postgres_db.py**, change the ```enabled``` function to return ```False```like so:
+To repeat the experiment, first you need to manually disable all but the ```File``` wrapper. For this, navigate to the [/triac/wrappers](/triac/wrappers) folder. For each of the wrappers, **that is not file.py**, change the ```enabled``` function to return ```False```like so:
 
 ```python
 @staticmethod
@@ -21,7 +18,16 @@ Afterward, execute the following command:
 python3 -m triac --unit ANSIBLE --continue-on-error --keep-base-images --rounds 100 --wrappers-per-round 10
 ```
 
-This will execute the experiment. We expect this to take rouhly 3 hours.
+This will execute the experiment. We expect this to take roughly 1 hours and 45 minutes.
 
 ## Results
 
+Our execution took 1 hour, 28 minutes and 23 seconds. Below is a screenshot of the finished execution:
+
+![Image](/experiments/unit/screenshot.png "Screenshot of the TRIaC experiment for unit testing")
+
+You can find the whole execution log, including all details in the ```triac.log``` file in this folder.
+
+In total, we uncovered 6 errors.
+
+TODO: describe errors
